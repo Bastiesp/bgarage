@@ -972,6 +972,7 @@ function pdfHeader(doc, W, M, badge, subBadge, extra) {
   if (extra) {
     doc.text(extra, W-20, 33, { align: 'right' });
   }
+}
 
 function pdfInfoBox(doc, x, y, w, h, titulo, linea1, linea2, linea3) {
   doc.setFillColor(248,252,253); doc.setDrawColor(224,244,247); doc.setLineWidth(.5);
