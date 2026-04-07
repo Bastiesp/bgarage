@@ -937,6 +937,16 @@ async function pdfInforme(id) {
 // ════════════════════════════════════════════════════════════════════════════
 const CAL      = [0, 151, 167];
 const CAL_DARK = [0, 105, 120];
+function dibujarPiston(doc, x, y, scale = 1) {
+  const [R,G,B] = CAL;
+
+  doc.setDrawColor(R,G,B);
+  doc.setLineWidth(1.2);
+
+  doc.rect(x, y, 12*scale, 10*scale);
+  doc.line(x + 6*scale, y + 10*scale, x + 6*scale, y + 20*scale);
+  doc.circle(x + 6*scale, y + 24*scale, 3*scale);
+}
 
 function pdfHeader(doc, W, M, badge, subBadge, extra) {
   // Fondo limpio
