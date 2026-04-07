@@ -938,49 +938,40 @@ async function pdfInforme(id) {
 const CAL      = [0, 151, 167];
 const CAL_DARK = [0, 105, 120];
 
-function dibujarEngrane(doc, cx, cy, r) {
-  const [R,G,B] = CAL;
-  const dientes = 8, rInt = r*.62, rD = r*1.28, rAguj = r*.28;
-  doc.setFillColor(R,G,B); doc.circle(cx,cy,r,'F');
-  for(let i=0;i<dientes;i++){
-    const a = (i/dientes)*2*Math.PI, aw = Math.PI/dientes*.7;
-    const x1=cx+rInt*Math.cos(a-aw), y1=cy+rInt*Math.sin(a-aw);
-    const x2=cx+rInt*Math.cos(a+aw), y2=cy+rInt*Math.sin(a+aw);
-    const x3=cx+rD*Math.cos(a+aw*.6), y3=cy+rD*Math.sin(a+aw*.6);
-    const x4=cx+rD*Math.cos(a-aw*.6), y4=cy+rD*Math.sin(a-aw*.6);
-    doc.setFillColor(R,G,B);
-    doc.triangle(x1,y1,x2,y2,x4,y4,'F');
-    doc.triangle(x2,y2,x3,y3,x4,y4,'F');
-  }
-  doc.setFillColor(255,255,255); doc.circle(cx,cy,rAguj,'F');
-  doc.setFillColor(R,G,B);
-  const cr=rAguj*.55;
-  doc.rect(cx-cr, cy-r*.18, cr*2, r*.36,'F');
-  doc.rect(cx-r*.18, cy-cr, r*.36, cr*2,'F');
-  doc.setFillColor(255,255,255); doc.circle(cx,cy,rAguj*.55,'F');
-}
-
 function pdfHeader(doc, W, M, badge, subBadge, extra) {
-  // Fondo blanco + barra calipso
-  doc.setFillColor(255,255,255); doc.rect(0,0,W,60,'F');
-  doc.setFillColor(...CAL); doc.rect(0,57,W,3,'F');
-  // Engrane logo
-  dibujarEngrane(doc, M+14, 28, 12);
+  // Fondo limpio
+  doc.setFillColor(255,255,255);
+  doc.rect(0,0,W,60,'F');
+
+  // Logo pistón
+  dibujarPiston(doc, M+8, 18, 0.8);
+
   // Nombre taller
-  doc.setFont('helvetica','bold'); doc.setFontSize(26); doc.setTextColor(25,28,32);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(26);
+  doc.setTextColor(25,28,32);
   doc.text('BGarage', M+34, 24);
-  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(107,114,128);
+
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(9);
+  doc.setTextColor(107,114,128);
   doc.text('Taller Automotriz · Concepción', M+34, 31);
-  // Badge tipo documento
-  doc.setDrawColor(...CAL); doc.setLineWidth(.8);
-  doc.roundedRect(W-70,8,54,15,2,2,'D');
-  doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...CAL);
-  doc.text(badge, W-43, 18, {align:'center'});
-  // Info extra (número + fecha)
-  doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(107,114,128);
-  doc.text(subBadge, W-43, 26, {align:'center'});
-  if (extra) doc.text(extra, W-43, 33, {align:'center'});
-}
+
+  // Tipo documento (SIN CAJA)
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(12);
+  doc.setTextColor(...CAL);
+  doc.text(badge, W-20, 18, { align: 'right' });
+
+  // Info extra
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(8);
+  doc.setTextColor(107,114,128);
+  doc.text(subBadge, W-20, 26, { align: 'right' });
+
+  if (extra) {
+    doc.text(extra, W-20, 33, { align: 'right' });
+  }
 
 function pdfInfoBox(doc, x, y, w, h, titulo, linea1, linea2, linea3) {
   doc.setFillColor(248,252,253); doc.setDrawColor(224,244,247); doc.setLineWidth(.5);
