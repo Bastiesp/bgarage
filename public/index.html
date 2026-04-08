@@ -1098,7 +1098,7 @@ function generarPDFPresupuesto(p) {
   const colW = (W-2*M-8)/2;
 
   // Boxes info
-  pdfInfoBox(doc, M, y, colW, 38,
+  pdfInfoBox(doc, M, y, colW, 18,
     'CLIENTE',
     p.cliente || '—',
     p.telefono || '',
@@ -1124,7 +1124,7 @@ function generarPDFPresupuesto(p) {
   // Validez del presupuesto
   y = Math.min(y, 236);
   doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(156,163,175);
-  doc.text('* Este presupuesto tiene una validez de 30 días desde su emisión.', M, y);
+  doc.text('* Este presupuesto tiene una validez de 7 días desde su emisión.', M, y);
   y += 8;
 
   // Firma
