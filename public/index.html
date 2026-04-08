@@ -819,7 +819,7 @@ async function loadReparaciones() {
   try {
     const data = await api('/api/reparaciones');
     document.getElementById('rep-count').textContent = `(${data.length})`;
-    const cols = { en_reparacion:[], presupuesto_enviado:[], entregado:[] };
+    const cols = { presupuesto_enviado:[], en_reparacion:[], entregado:[] };
     data.forEach(r => { if (cols[r.estado]) cols[r.estado].push(r); else cols.en_reparacion.push(r); });
 
     ['en_reparacion', 'presupuesto_enviado', 'entregado'].forEach(key => {
