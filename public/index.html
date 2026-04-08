@@ -1158,7 +1158,7 @@ function generarPDFInforme(r) {
   const colW = (W-2*M-8)/2;
 
   // Box propietario
-  pdfInfoBox(doc, M, y, colW, 44,
+  pdfInfoBox(doc, M, y, colW, 18,
     'PROPIETARIO',
     r.cliente || '—',
     r.telefono || '',
@@ -1166,7 +1166,7 @@ function generarPDFInforme(r) {
   );
 
   // Box vehículo
-  pdfInfoBox(doc, M+colW+8, y, colW, 44,
+  pdfInfoBox(doc, M+colW+8, y, colW, 18,
     'VEHÍCULO',
     [r.marca, r.modelo, r.anio].filter(Boolean).join(' ') || '—',
     [r.patente ? 'Pat: '+r.patente : '', r.km ? 'KM ingreso: '+r.km : ''].filter(Boolean).join('   '),
