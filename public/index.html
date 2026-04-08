@@ -1040,7 +1040,7 @@ function pdfTablaItems(doc, items, yStart, W, M) {
 
 function pdfTotal(doc, total, y, W, M) {
   y += 2;
-  doc.setFillColor(25,28,32); doc.rect(M,y,W-2*M,13,'F');
+  doc.setFillColor(220,220,220); doc.rect(M,y,W-2*M,13,'F');
   doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(255,255,255);
   doc.text('TOTAL', M+6, y+9);
   doc.setTextColor(...CAL);
@@ -1098,7 +1098,7 @@ function generarPDFPresupuesto(p) {
   const colW = (W-2*M-8)/2;
 
   // Boxes info
-  pdfInfoBox(doc, M, y, colW, 18,
+  pdfInfoBox(doc, M, y, colW, 28,
     'CLIENTE',
     p.cliente || '—',
     p.telefono || '',
