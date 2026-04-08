@@ -1001,7 +1001,7 @@ function pdfInfoBox(doc, x, y, w, h, titulo, linea1, linea2, linea3) {
 function pdfTablaItems(doc, items, yStart, W, M) {
   let y = yStart;
   // Cabecera tabla
-  doc.setFillColor(25,28,32); doc.rect(M, y, W-2*M, 9,'F');
+  doc.setFillColor(220,220,220); doc.rect(M, y, W-2*M, 9,'F');
   doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(...CAL);
   doc.text('DESCRIPCIÓN', M+5, y+6);
   doc.text('TIPO', M+118, y+6);
