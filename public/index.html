@@ -355,13 +355,27 @@ main { flex:1; padding:28px; }
     <div class="cards-grid" id="presupuestos-list"></div>
   </div>
 
-  <!-- PÁGINA REPARACIONES -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- PÁGINA REPARACIONES - KANBAN REORDENADO -->
+  <!-- NUEVO ORDEN: 1. PRESUPUESTO ENVIADO → 2. EN REPARACIÓN → 3. ENTREGADO -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
   <div id="page-reparaciones" class="page">
     <div class="page-header">
       <div class="page-title">Reparaciones <span id="rep-count"></span></div>
       <button class="btn btn-primary" onclick="abrirModalReparacion()">+ Nueva reparación</button>
     </div>
     <div class="kanban">
+      
+      <!-- COLUMNA 1: PRESUPUESTO ENVIADO / PENDIENTE (ahora primera) -->
+      <div class="kanban-col">
+        <div class="kanban-header">
+          <span class="kanban-title" style="color:#0097a7">Presup. enviado / Pendiente</span>
+          <span class="kanban-badge" id="cnt-presupuesto_enviado">0</span>
+        </div>
+        <div class="kanban-body" id="body-presupuesto_enviado"></div>
+      </div>
+
+      <!-- COLUMNA 2: EN REPARACIÓN (ahora segunda) -->
       <div class="kanban-col">
         <div class="kanban-header">
           <span class="kanban-title" style="color:#1a9e50">En reparación</span>
@@ -369,13 +383,8 @@ main { flex:1; padding:28px; }
         </div>
         <div class="kanban-body" id="body-en_reparacion"></div>
       </div>
-      <div class="kanban-col">
-        <div class="kanban-header">
-          <span class="kanban-title" style="color:#0097a7">Presup. enviado</span>
-          <span class="kanban-badge" id="cnt-presupuesto_enviado">0</span>
-        </div>
-        <div class="kanban-body" id="body-presupuesto_enviado"></div>
-      </div>
+
+      <!-- COLUMNA 3: ENTREGADO -->
       <div class="kanban-col">
         <div class="kanban-header">
           <span class="kanban-title" style="color:#6b7280">Entregado</span>
@@ -383,6 +392,7 @@ main { flex:1; padding:28px; }
         </div>
         <div class="kanban-body" id="body-entregado"></div>
       </div>
+      
     </div>
   </div>
 </main>
@@ -516,9 +526,10 @@ main { flex:1; padding:28px; }
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Estado</label>
+          <!-- SELECT REORDENADO: Primero PRESUPUESTO ENVIADO (default para nuevas) -->
           <select class="form-select" id="rep-estado">
+            <option value="presupuesto_enviado" selected>Presupuesto enviado / Pendiente</option>
             <option value="en_reparacion">En reparación</option>
-            <option value="presupuesto_enviado">Presupuesto enviado</option>
             <option value="entregado">Entregado</option>
           </select>
         </div>
@@ -588,10 +599,22 @@ async function api(path, opts = {}) {
 const fmt     = n => '$\u00a0' + Math.round(n || 0).toLocaleString('es-CL');
 const fmtDate = s => {
   if (!s) return '—';
-  const d = new Date(s);
-  return isNaN(d) ? '—' : d.toLocaleDateString('es-CL', { day:'2-digit', month:'2-digit', year:'numeric' });
+  try {
+    const d = new Date(s);
+    if (isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString('es-CL', { day:'2-digit', month:'2-digit', year:'numeric' });
+  } catch (e) {
+    return '—';
+  }
 };
 const padNum = n => String(n || 0).padStart(4, '0');
+
+// Función segura para sanitizar strings
+const safeStr = (val, fallback = '—') => {
+  if (val === null || val === undefined) return fallback;
+  const str = String(val).trim();
+  return str || fallback;
+};
 
 function toast(msg, ok = true) {
   const t = document.getElementById('toast');
@@ -708,7 +731,10 @@ function getItems(cid) {
   }).filter(i => i.descripcion);
 }
 
-function sumItems(items) { return (items || []).reduce((s, i) => s + (i.valor || 0), 0); }
+function sumItems(items) { 
+  if (!Array.isArray(items)) return 0;
+  return items.reduce((s, i) => s + (parseFloat(i?.valor) || 0), 0); 
+}
 
 // ─── PRESUPUESTOS ─────────────────────────────────────────────────────────
 async function loadPresupuestos() {
@@ -819,10 +845,18 @@ async function loadReparaciones() {
   try {
     const data = await api('/api/reparaciones');
     document.getElementById('rep-count').textContent = `(${data.length})`;
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    // COLUMNAS REORDENADAS: 1. presupuesto_enviado → 2. en_reparacion → 3. entregado
+    // ═══════════════════════════════════════════════════════════════════════
     const cols = { presupuesto_enviado:[], en_reparacion:[], entregado:[] };
-    data.forEach(r => { if (cols[r.estado]) cols[r.estado].push(r); else cols.en_reparacion.push(r); });
+    data.forEach(r => { 
+      if (cols[r.estado]) cols[r.estado].push(r); 
+      else cols.presupuesto_enviado.push(r); // Fallback a primera columna
+    });
 
-    ['en_reparacion', 'presupuesto_enviado', 'entregado'].forEach(key => {
+    // NUEVO ORDEN DE ITERACIÓN
+    ['presupuesto_enviado', 'en_reparacion', 'entregado'].forEach(key => {
       const items = cols[key];
       document.getElementById('cnt-' + key).textContent = items.length;
       const body = document.getElementById('body-' + key);
@@ -840,9 +874,9 @@ async function loadReparaciones() {
           ${r.fechaEntrega ? `<div style="font-size:.72rem;color:var(--text3);margin-top:4px">📅 ${fmtDate(r.fechaEntrega)}</div>` : ''}
           ${total > 0 ? `<div class="kc-total">${fmt(total)}</div>` : ''}
           <div class="kc-actions" onclick="event.stopPropagation()">
-            ${key==='en_reparacion'        ? `<button class="btn btn-sm btn-secondary" onclick="cambiarEstado('${r._id}','presupuesto_enviado')">→ Presup.</button>` : ''}
-            ${key==='presupuesto_enviado'  ? `<button class="btn btn-sm btn-secondary" onclick="cambiarEstado('${r._id}','entregado')">→ Entregar</button>` : ''}
-            ${key==='entregado'            ? `<button class="btn btn-sm btn-primary"   onclick="pdfInforme('${r._id}')">📄 Informe</button>` : ''}
+            ${key==='presupuesto_enviado' ? `<button class="btn btn-sm btn-secondary" onclick="cambiarEstado('${r._id}','en_reparacion')">→ Reparar</button>` : ''}
+            ${key==='en_reparacion'      ? `<button class="btn btn-sm btn-secondary" onclick="cambiarEstado('${r._id}','entregado')">→ Entregar</button>` : ''}
+            ${key==='entregado'          ? `<button class="btn btn-sm btn-primary"   onclick="pdfInforme('${r._id}')">📄 Informe</button>` : ''}
             <button class="btn btn-sm btn-danger" onclick="eliminarReparacion('${r._id}')">🗑</button>
           </div>
         </div>`;
@@ -856,7 +890,12 @@ function abrirModalReparacion() {
   document.getElementById('modal-rep-title').textContent = 'Nueva reparación';
   ['cliente','telefono','marca','modelo','anio','patente','km','tipo','descripcion','notas']
     .forEach(f => document.getElementById('rep-' + f).value = '');
-  document.getElementById('rep-estado').value = 'en_reparacion';
+  
+  // ═══════════════════════════════════════════════════════════════════════
+  // DEFAULT AHORA ES 'presupuesto_enviado' (primera columna del kanban)
+  // ═══════════════════════════════════════════════════════════════════════
+  document.getElementById('rep-estado').value = 'presupuesto_enviado';
+  
   document.getElementById('rep-fecha-entrega').value = '';
   document.getElementById('rep-items').innerHTML = '';
   document.getElementById('rep-total').textContent = '$0';
@@ -871,7 +910,7 @@ async function editarReparacion(id) {
     document.getElementById('modal-rep-title').textContent = `Editar — ${[r.marca,r.modelo].filter(Boolean).join(' ') || r.patente || 'Reparación'}`;
     ['cliente','telefono','marca','modelo','anio','patente','km','tipo','descripcion','notas']
       .forEach(f => document.getElementById('rep-' + f).value = r[f] || '');
-    document.getElementById('rep-estado').value = r.estado || 'en_reparacion';
+    document.getElementById('rep-estado').value = r.estado || 'presupuesto_enviado';
     document.getElementById('rep-fecha-entrega').value = r.fechaEntrega ? r.fechaEntrega.substring(0, 10) : '';
     document.getElementById('rep-items').innerHTML = '';
     (r.items || []).forEach(i => agregarItem('rep-items', i.tipo, i.descripcion, i.valor));
@@ -933,55 +972,93 @@ async function pdfInforme(id) {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// PDF — HELPERS COMUNES
+// PDF — HELPERS COMUNES (CON PISTÓN REAL Y VALIDACIONES ROBUSTAS)
 // ════════════════════════════════════════════════════════════════════════════
 const CAL      = [0, 151, 167];
 const CAL_DARK = [0, 105, 120];
+
+// URL de imagen real de pistón - hosting confiable (imgur)
+const PISTON_IMAGE_URL = 'https://i.imgur.com/8Km9tLL.png';
+
 function dibujarPiston(doc, x, y, scale = 1) {
-  const [R,G,B] = CAL;
-
-  doc.setDrawColor(R,G,B);
-  doc.setLineWidth(1.2);
-
-  doc.rect(x, y, 12*scale, 10*scale);
-  doc.line(x + 6*scale, y + 10*scale, x + 6*scale, y + 20*scale);
-  doc.circle(x + 6*scale, y + 24*scale, 3*scale);
+  // Reemplazado: ahora usa imagen real de pistón
+  const width = 35 * scale;
+  const height = 35 * scale;
+  
+  try {
+    doc.addImage(PISTON_IMAGE_URL, 'PNG', x, y, width, height);
+  } catch (e) {
+    // Fallback si falla la carga de imagen
+    const [R,G,B] = CAL;
+    doc.setDrawColor(R,G,B);
+    doc.setFillColor(240,240,245);
+    doc.setLineWidth(1);
+    
+    // Círculo base
+    doc.circle(x + width/2, y + height/2, width/3, 'FD');
+    // Anillos
+    doc.setLineWidth(2);
+    doc.circle(x + width/2, y + height/2, width/4, 'S');
+    doc.setLineWidth(1);
+    doc.circle(x + width/2, y + height/2, width/5, 'S');
+  }
 }
 
 function pdfHeader(doc, W, M, badge, subBadge, extra) {
-  // Fondo limpio
+  const headerHeight = 40;
+  
+  // Fondo blanco
   doc.setFillColor(255,255,255);
-  doc.rect(0,0,W,60,'F');
-
-  // Logo pistón
-  dibujarPiston(doc, M+8, 18, 0.8);
-
-  // Nombre taller
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(26);
-  doc.setTextColor(25,28,32);
-  doc.text('BGarage', M+34, 24);
-
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(9);
-  doc.setTextColor(107,114,128);
-  doc.text('Taller Automotriz · Concepción', M+34, 31);
-
-  // Tipo documento (SIN CAJA)
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(12);
-  doc.setTextColor(...CAL);
-  doc.text(badge, W-20, 18, { align: 'right' });
-
+  doc.rect(0, 0, W, headerHeight, 'F');
+  
+  // Línea superior fina color marca
+  doc.setDrawColor(...CAL);
+  doc.setLineWidth(2);
+  doc.line(M, 6, W-M, 6);
+  
+  // Logo pistón REAL (imagen)
+  dibujarPiston(doc, M+5, 10, 0.9);
+  
+  // Nombre taller - más sobrio
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(20);
+  doc.setTextColor(25,30,35);
+  doc.text('BGarage', M+42, 22);
+  
+  // Subtítulo minimalista
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(130,140,150);
+  doc.text('TALLER AUTOMOTRIZ ESPECIALIZADO · CONCEPCIÓN', M+42, 29);
+  
+  // Separador vertical sutil
+  doc.setDrawColor(230,235,240);
+  doc.setLineWidth(0.5);
+  doc.line(W-65, 12, W-65, 34);
+  
+  // Tipo documento (badge)
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.setTextColor(...CAL_DARK);
+  doc.text(badge.toUpperCase(), W-M-5, 20, { align: 'right' });
+  
   // Info extra
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(8);
-  doc.setTextColor(107,114,128);
-  doc.text(subBadge, W-20, 26, { align: 'right' });
-
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(140,150,160);
+  doc.text(subBadge, W-M-5, 27, { align: 'right' });
+  
   if (extra) {
-    doc.text(extra, W-20, 33, { align: 'right' });
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(...CAL);
+    doc.text(extra, W-M-5, 33, { align: 'right' });
   }
+  
+  // Línea inferior sutil
+  doc.setDrawColor(245,247,250);
+  doc.setLineWidth(0.5);
+  doc.line(M, headerHeight-2, W-M, headerHeight-2);
 }
 
 function pdfInfoBox(doc, x, y, w, h, titulo, linea1, linea2, linea3) {
@@ -1008,7 +1085,7 @@ function pdfTablaItems(doc, items, yStart, W, M) {
   doc.text('VALOR', W-M-5, y+6, {align:'right'});
   y += 11;
 
-  if (!items.length) {
+  if (!items || !items.length) {
     doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(156,163,175);
     doc.text('Sin ítems registrados', M+5, y+7); y += 14;
   } else {
@@ -1061,15 +1138,15 @@ function pdfNotas(doc, notas, y, W, M) {
   return y+h+10;
 }
 
-function pdfFirma(doc, y, M) {
+function pdfFirma(doc, y, xPos) {
   y = Math.max(y, 248);
   doc.setDrawColor(...CAL); doc.setLineWidth(.6);
-  doc.line(M, y, M+80, y);
+  doc.line(xPos, y, xPos+80, y);
   doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(25,28,32);
-  doc.text('Bastian Espinoza F.', M, y+8);
+  doc.text('Bastian Espinoza F.', xPos, y+8);
   doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(107,114,128);
-  doc.text('+56 9 5935 5607', M, y+15);
-  doc.text('BGarage — Taller Automotriz, Concepción', M, y+21);
+  doc.text('+56 9 5935 5607', xPos, y+15);
+  doc.text('BGarage — Taller Automotriz, Concepción', xPos, y+21);
 }
 
 function pdfPie(doc, W) {
@@ -1079,19 +1156,39 @@ function pdfPie(doc, W) {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// PDF PRESUPUESTO
+// PDF PRESUPUESTO - CORREGIDO CON VALIDACIONES
 // ════════════════════════════════════════════════════════════════════════════
 function generarPDFPresupuesto(p) {
   if (!p) { toast('No hay datos del presupuesto', false); return; }
+  
+  // Validar que jsPDF esté cargado
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    toast('Error: Librería PDF no cargada', false);
+    return;
+  }
+  
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit:'mm', format:'a4' });
   const W=210, M=18;
 
+  // Sanitizar datos
+  const numero = safeStr(p.numero, '0');
+  const cliente = safeStr(p.cliente);
+  const telefono = safeStr(p.telefono);
+  const marca = safeStr(p.marca);
+  const modelo = safeStr(p.modelo);
+  const anio = safeStr(p.anio);
+  const patente = safeStr(p.patente);
+  const km = safeStr(p.km);
+  const notas = safeStr(p.notas);
+  const fecha = p.fecha ? fmtDate(p.fecha) : fmtDate(new Date());
+  const items = Array.isArray(p.items) ? p.items : [];
+
   // Cabecera
   pdfHeader(doc, W, M,
     'PRESUPUESTO',
-    `N° ${padNum(p.numero)}`,
-    `Fecha: ${fmtDate(p.fecha)}`
+    `N° ${padNum(numero)}`,
+    `Fecha: ${fecha}`
   );
 
   let y = 68;
@@ -1100,26 +1197,28 @@ function generarPDFPresupuesto(p) {
   // Boxes info
   pdfInfoBox(doc, M, y, colW, 28,
     'CLIENTE',
-    p.cliente || '—',
-    p.telefono || '',
+    cliente,
+    telefono,
     ''
   );
   pdfInfoBox(doc, M+colW+8, y, colW, 38,
     'VEHÍCULO',
-    [p.marca, p.modelo, p.anio].filter(Boolean).join(' ') || '—',
-    [p.patente ? 'Patente: '+p.patente : '', p.km ? 'KM: '+p.km : ''].filter(Boolean).join('   '),
+    [marca, modelo, anio].filter(v => v && v !== '—').join(' ') || '—',
+    [patente !== '—' ? 'Patente: '+patente : '', km !== '—' ? 'KM: '+km : ''].filter(Boolean).join('   '),
     ''
   );
   y += 46;
 
   // Tabla ítems
-  y = pdfTablaItems(doc, p.items || [], y, W, M);
+  y = pdfTablaItems(doc, items, y, W, M);
 
   // Total
-  y = pdfTotal(doc, sumItems(p.items), y, W, M);
+  y = pdfTotal(doc, sumItems(items), y, W, M);
 
   // Notas
-  y = pdfNotas(doc, p.notas, y, W, M);
+  if (notas && notas !== '—') {
+    y = pdfNotas(doc, notas, y, W, M);
+  }
 
   // Validez del presupuesto
   y = Math.min(y, 236);
@@ -1133,98 +1232,167 @@ function generarPDFPresupuesto(p) {
   // Pie
   pdfPie(doc, W);
 
-  const nombre = (p.cliente || 'cliente').replace(/\s+/g,'-').toLowerCase();
-  doc.save(`presupuesto-${padNum(p.numero)}-${nombre}.pdf`);
-  toast('PDF presupuesto generado ✓');
+  // Guardar con nombre seguro
+  const nombreSafe = cliente.replace(/\s+/g,'-').toLowerCase().replace(/[^a-z0-9\-]/g, '');
+  
+  try {
+    doc.save(`presupuesto-${padNum(numero)}-${nombreSafe || 'cliente'}.pdf`);
+    toast('PDF presupuesto generado ✓');
+  } catch (e) {
+    console.error('Error guardando PDF:', e);
+    toast('Error al generar PDF: ' + e.message, false);
+  }
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// PDF INFORME DE ENTREGA
+// PDF INFORME DE ENTREGA - CORREGIDO CON VALIDACIONES ROBUSTAS
 // ════════════════════════════════════════════════════════════════════════════
 function generarPDFInforme(r) {
-  if (!r) { toast('No hay datos de la reparación', false); return; }
+  if (!r) { 
+    toast('No hay datos de la reparación', false); 
+    return; 
+  }
+  
+  // Validar que jsPDF esté cargado
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    toast('Error: Librería PDF no cargada', false);
+    return;
+  }
+  
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit:'mm', format:'a4' });
-  const W=210, M=18;
+  const W = 210, M = 18;
+
+  // Sanitizar datos - convertir todo a string seguro
+  const numero = safeStr(r.numero, '0');
+  const cliente = safeStr(r.cliente);
+  const telefono = safeStr(r.telefono);
+  const marca = safeStr(r.marca);
+  const modelo = safeStr(r.modelo);
+  const anio = safeStr(r.anio);
+  const patente = safeStr(r.patente);
+  const km = safeStr(r.km);
+  const tipo = safeStr(r.tipo);
+  const descripcion = safeStr(r.descripcion);
+  const notas = safeStr(r.notas);
+  const fechaEntrega = fmtDate(new Date());
+  const fechaIngreso = r.fechaIngreso ? fmtDate(r.fechaIngreso) : '—';
+  const items = Array.isArray(r.items) ? r.items : [];
 
   // Cabecera
   pdfHeader(doc, W, M,
     'INFORME DE ENTREGA',
-    `Reparación N° ${padNum(r.numero)}`,
-    `Entrega: ${fmtDate(new Date())}`
+    `Reparación N° ${padNum(numero)}`,
+    `Entrega: ${fechaEntrega}`
   );
 
   let y = 68;
-  const colW = (W-2*M-8)/2;
+  const colW = (W - 2 * M - 8) / 2;
 
   // Box propietario
-  pdfInfoBox(doc, M, y, colW, 18,
+  pdfInfoBox(doc, M, y, colW, 28,
     'PROPIETARIO',
-    r.cliente || '—',
-    r.telefono || '',
+    cliente,
+    telefono,
     ''
   );
 
   // Box vehículo
-  pdfInfoBox(doc, M+colW+8, y, colW, 18,
+  const vehiculoTexto = [marca, modelo, anio].filter(v => v && v !== '—').join(' ') || '—';
+  const detallesVehiculo = [
+    patente !== '—' ? 'Pat: ' + patente : '',
+    km !== '—' ? 'KM ingreso: ' + km : ''
+  ].filter(Boolean).join('   ') || '';
+
+  pdfInfoBox(doc, M + colW + 8, y, colW, 38,
     'VEHÍCULO',
-    [r.marca, r.modelo, r.anio].filter(Boolean).join(' ') || '—',
-    [r.patente ? 'Pat: '+r.patente : '', r.km ? 'KM ingreso: '+r.km : ''].filter(Boolean).join('   '),
-    `Ingreso: ${fmtDate(r.fechaIngreso)}`
+    vehiculoTexto,
+    detallesVehiculo,
+    `Ingreso: ${fechaIngreso}`
   );
   y += 52;
 
   // Box trabajo realizado
-  doc.setFillColor(248,252,253); doc.setDrawColor(224,244,247); doc.setLineWidth(.5);
-  doc.roundedRect(M, y, W-2*M, r.descripcion ? 34 : 22, 3, 3, 'FD');
-  doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...CAL);
-  doc.text('TRABAJO REALIZADO', M+6, y+8);
-  doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(25,28,32);
-  doc.text(r.tipo || '—', M+6, y+17);
-  if (r.descripcion) {
-    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(107,114,128);
-    const descLines = doc.splitTextToSize(r.descripcion, W-2*M-16);
-    doc.text(descLines, M+6, y+25);
-    y += Math.max(34, descLines.length*5+28);
+  const tieneDescripcion = descripcion && descripcion !== '—';
+  const alturaBox = tieneDescripcion ? 34 : 22;
+  
+  doc.setFillColor(248, 252, 253); 
+  doc.setDrawColor(224, 244, 247); 
+  doc.setLineWidth(0.5);
+  doc.roundedRect(M, y, W - 2 * M, alturaBox, 3, 3, 'FD');
+  
+  doc.setFont('helvetica', 'bold'); 
+  doc.setFontSize(7); 
+  doc.setTextColor(...CAL);
+  doc.text('TRABAJO REALIZADO', M + 6, y + 8);
+  
+  doc.setFont('helvetica', 'bold'); 
+  doc.setFontSize(11); 
+  doc.setTextColor(25, 28, 32);
+  doc.text(tipo, M + 6, y + 17);
+  
+  if (tieneDescripcion) {
+    doc.setFont('helvetica', 'normal'); 
+    doc.setFontSize(8.5); 
+    doc.setTextColor(107, 114, 128);
+    const descLines = doc.splitTextToSize(descripcion, W - 2 * M - 16);
+    doc.text(descLines, M + 6, y + 25);
+    y += Math.max(34, descLines.length * 5 + 28);
   } else {
     y += 28;
   }
 
   // Tabla ítems
-  y = pdfTablaItems(doc, r.items || [], y, W, M);
+  y = pdfTablaItems(doc, items, y, W, M);
 
   // Total
-  y = pdfTotal(doc, sumItems(r.items), y, W, M);
+  y = pdfTotal(doc, sumItems(items), y, W, M);
 
   // Notas / recomendaciones
-  y = pdfNotas(doc, r.notas, y, W, M);
+  if (notas && notas !== '—') {
+    y = pdfNotas(doc, notas, y, W, M);
+  }
 
   // Sección firma cliente
   const yFirmaCliente = Math.min(y + 4, 244);
-  doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...CAL);
+  
+  doc.setFont('helvetica', 'bold'); 
+  doc.setFontSize(7); 
+  doc.setTextColor(...CAL);
   doc.text('CONFORMIDAD DEL CLIENTE', M, yFirmaCliente);
-  doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(107,114,128);
-  doc.text('Al firmar este documento, el cliente declara haber recibido el vehículo en conformidad.', M, yFirmaCliente+6);
-  doc.setDrawColor(var_text3()); doc.setLineWidth(.4);
-  doc.line(M, yFirmaCliente+18, M+80, yFirmaCliente+18);
-  doc.text('Firma propietario', M, yFirmaCliente+23);
-  doc.line(W-M-80, yFirmaCliente+18, W-M, yFirmaCliente+18);
-  doc.text('Fecha', W-M-20, yFirmaCliente+23);
+  
+  doc.setFont('helvetica', 'normal'); 
+  doc.setFontSize(8); 
+  doc.setTextColor(107, 114, 128);
+  doc.text('Al firmar este documento, el cliente declara haber recibido el vehículo en conformidad.', M, yFirmaCliente + 6);
+  
+  // Líneas de firma
+  doc.setDrawColor(150, 160, 170); 
+  doc.setLineWidth(0.4);
+  doc.line(M, yFirmaCliente + 18, M + 80, yFirmaCliente + 18);
+  doc.text('Firma propietario', M, yFirmaCliente + 23);
+  
+  doc.line(W - M - 80, yFirmaCliente + 18, W - M, yFirmaCliente + 18);
+  doc.text('Fecha', W - M - 20, yFirmaCliente + 23);
 
   // Firma taller
-  pdfFirma(doc, yFirmaCliente+6, W-M-90);
+  pdfFirma(doc, yFirmaCliente + 6, W - M - 90);
 
   // Pie
   pdfPie(doc, W);
 
-  const nombre = (r.cliente || 'cliente').replace(/\s+/g,'-').toLowerCase();
-  const patente = (r.patente || 'vehiculo').toLowerCase();
-  doc.save(`informe-${patente}-${nombre}.pdf`);
-  toast('Informe PDF generado ✓');
+  // Guardar con nombre seguro
+  const nombreSafe = cliente.replace(/\s+/g, '-').toLowerCase().replace(/[^a-z0-9\-]/g, '');
+  const patenteSafe = patente.toLowerCase().replace(/[^a-z0-9]/g, '');
+  
+  try {
+    doc.save(`informe-${patenteSafe || 'vehiculo'}-${nombreSafe || 'cliente'}.pdf`);
+    toast('Informe PDF generado ✓');
+  } catch (e) {
+    console.error('Error guardando PDF:', e);
+    toast('Error al generar PDF: ' + e.message, false);
+  }
 }
-
-// Helper color para linea firma
-function var_text3() { return [190,196,205]; }
 
 </script>
 </body>
