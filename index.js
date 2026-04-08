@@ -60,9 +60,14 @@ const presupuestoSchema = new mongoose.Schema({
   items:    { type: [itemSchema], default: [] }
 }, { timestamps: true });
 
+// ═══════════════════════════════════════════════════════════════════════════
+// SCHEMA REPARACIÓN - ESTADOS REORDENADOS PARA KANBAN
+// ═══════════════════════════════════════════════════════════════════════════
+// NUEVO ORDEN: 1. presupuesto_enviado → 2. en_reparacion → 3. entregado
+// ─────────────────────────────────────────────────────────────────────────────
 const reparacionSchema = new mongoose.Schema({
   numero:       { type: Number, index: true },
-  fechaIngreso: { type: Date, default: Date.now },
+  fechaIngreso:   { type: Date, default: Date.now },
   cliente:      { type: String, required: [true, 'El cliente es obligatorio'], trim: true },
   telefono:     { type: String, trim: true, default: '' },
   marca:        { type: String, trim: true, default: '' },
@@ -72,7 +77,14 @@ const reparacionSchema = new mongoose.Schema({
   km:           { type: String, trim: true, default: '' },
   tipo:         { type: String, required: [true, 'El tipo de reparación es obligatorio'], trim: true },
   descripcion:  { type: String, default: '' },
-  estado:       { type: String, enum: ['presupuesto_enviado', 'en_reparacion', 'entregado'], default: 'presupuesto_enviado' },
+  
+  // ESTADOS REORDENADOS - default ahora es 'presupuesto_enviado' (primera columna)
+  estado: { 
+    type: String, 
+    enum: ['presupuesto_enviado', 'en_reparacion', 'entregado'], 
+    default: 'presupuesto_enviado'  // ← CAMBIADO: primera columna del kanban
+  },
+  
   fechaEntrega: { type: Date, default: null },
   notas:        { type: String, default: '' },
   items:        { type: [itemSchema], default: [] }
