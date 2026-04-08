@@ -72,7 +72,7 @@ const reparacionSchema = new mongoose.Schema({
   km:           { type: String, trim: true, default: '' },
   tipo:         { type: String, required: [true, 'El tipo de reparación es obligatorio'], trim: true },
   descripcion:  { type: String, default: '' },
-  estado:       { type: String, enum: ['en_reparacion', 'presupuesto_enviado', 'entregado'], default: 'en_reparacion' },
+  estado:       { type: String, enum: ['presupuesto_enviado', 'en_reparacion', 'entregado'], default: 'presupuesto_enviado' },
   fechaEntrega: { type: Date, default: null },
   notas:        { type: String, default: '' },
   items:        { type: [itemSchema], default: [] }
