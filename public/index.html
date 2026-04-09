@@ -25,6 +25,8 @@
   --radius:       10px;
   --shadow:       0 1px 4px rgba(0,0,0,.07);
   --shadow-md:    0 4px 16px rgba(0,0,0,.10);
+  --oil:          #d4a017;
+  --oil-light:    #f9f3e3;
 }
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 body {
@@ -105,8 +107,8 @@ body {
 .logo-text span { color:var(--accent); }
 .nav { display:flex; gap:4px; margin-left:auto; }
 .nav-btn {
-  padding:7px 20px; border-radius:7px;
-  font-size:.84rem; font-weight:600; cursor:pointer;
+  padding:7px 16px; border-radius:7px;
+  font-size:.82rem; font-weight:600; cursor:pointer;
   border:none; background:none; color:var(--text2);
   transition:all .18s; letter-spacing:.03em;
 }
@@ -144,6 +146,8 @@ main { flex:1; padding:28px; }
 .btn-secondary:hover { color:var(--accent); border-color:var(--accent); }
 .btn-danger { background:var(--danger-light); color:var(--danger); border:1px solid rgba(192,57,43,.2); }
 .btn-danger:hover { background:rgba(192,57,43,.15); }
+.btn-oil { background:var(--oil); color:#fff; }
+.btn-oil:hover { background:#b88a0f; }
 .btn-sm { padding:5px 13px; font-size:.77rem; }
 .btn-icon { padding:6px 10px; font-size:.85rem; }
 
@@ -262,6 +266,112 @@ main { flex:1; padding:28px; }
 .items-total-label { font-size:.84rem; color:var(--text2); }
 .items-total-value { font-family:'Barlow Condensed',sans-serif; font-size:1.45rem; font-weight:700; color:var(--accent); }
 
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* NUEVO: ESTILOS PARA TARJETA DE CAMBIO DE ACEITE */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+.oil-card-preview {
+  background: linear-gradient(135deg, #1a1c20 0%, #2d3748 100%);
+  border-radius: 16px;
+  padding: 32px;
+  color: #fff;
+  max-width: 400px;
+  margin: 0 auto 24px;
+  box-shadow: 0 20px 40px rgba(0,0,0,.3);
+  position: relative;
+  overflow: hidden;
+}
+.oil-card-preview::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(212,160,23,.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+.oil-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid rgba(212,160,23,.3);
+}
+.oil-card-logo {
+  width: 48px;
+  height: 48px;
+  background: var(--oil);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 1.5rem;
+  color: #1a1c20;
+}
+.oil-card-brand {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: .05em;
+}
+.oil-card-brand span { color: var(--oil); }
+.oil-card-sub {
+  font-size: .7rem;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+}
+.oil-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,.1);
+}
+.oil-card-row:last-child { border-bottom: none; }
+.oil-card-label {
+  font-size: .75rem;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.oil-card-value {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fff;
+}
+.oil-card-value.highlight { color: var(--oil); font-size: 1.3rem; }
+.oil-card-footer {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 2px solid rgba(212,160,23,.3);
+  text-align: center;
+}
+.oil-card-stamp {
+  display: inline-block;
+  padding: 8px 20px;
+  background: rgba(212,160,23,.2);
+  border: 2px solid var(--oil);
+  border-radius: 8px;
+  font-size: .8rem;
+  font-weight: 700;
+  color: var(--oil);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+}
+
+/* Formulario de aceite */
+.oil-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.oil-form-full { grid-column: 1 / -1; }
+
 /* ── MISC ── */
 .section-divider {
   font-family:'Barlow Condensed',sans-serif;
@@ -271,6 +381,8 @@ main { flex:1; padding:28px; }
   display:flex; align-items:center; gap:10px;
 }
 .section-divider::after { content:''; flex:1; height:1px; background:var(--accent-light); }
+.section-divider.oil { color: var(--oil); }
+.section-divider.oil::after { background: var(--oil-light); }
 .empty { text-align:center; padding:64px 20px; color:var(--text3); }
 .empty-icon { font-size:2.8rem; margin-bottom:12px; }
 .empty-title { font-size:1rem; font-weight:500; color:var(--text2); margin-bottom:4px; }
@@ -285,6 +397,7 @@ main { flex:1; padding:28px; }
 
 @media(max-width:900px) {
   .kanban { grid-template-columns:1fr; }
+  .oil-form-grid { grid-template-columns: 1fr; }
 }
 @media(max-width:640px) {
   .form-row, .form-row-3 { grid-template-columns:1fr; }
@@ -292,6 +405,7 @@ main { flex:1; padding:28px; }
   .topbar { padding:0 16px; }
   main { padding:18px 14px; }
   .items-header, .item-row { grid-template-columns:1fr 80px 88px 30px; }
+  .oil-card-preview { padding: 24px; }
 }
 </style>
 </head>
@@ -338,6 +452,7 @@ main { flex:1; padding:28px; }
   <nav class="nav">
     <button class="nav-btn active" onclick="showPage('presupuestos',this)">Presupuestos</button>
     <button class="nav-btn" onclick="showPage('reparaciones',this)">Reparaciones</button>
+    <button class="nav-btn" onclick="showPage('aceite',this)">Cambio Aceite</button>
   </nav>
   <div class="nav-right">
     <span class="user-badge" id="user-badge"></span>
@@ -355,27 +470,20 @@ main { flex:1; padding:28px; }
     <div class="cards-grid" id="presupuestos-list"></div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════════════════════════════ -->
-  <!-- PÁGINA REPARACIONES - KANBAN REORDENADO -->
-  <!-- NUEVO ORDEN: 1. PRESUPUESTO ENVIADO → 2. EN REPARACIÓN → 3. ENTREGADO -->
-  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- PÁGINA REPARACIONES -->
   <div id="page-reparaciones" class="page">
     <div class="page-header">
       <div class="page-title">Reparaciones <span id="rep-count"></span></div>
       <button class="btn btn-primary" onclick="abrirModalReparacion()">+ Nueva reparación</button>
     </div>
     <div class="kanban">
-      
-      <!-- COLUMNA 1: PRESUPUESTO ENVIADO / PENDIENTE (ahora primera) -->
       <div class="kanban-col">
         <div class="kanban-header">
-          <span class="kanban-title" style="color:#0097a7">Presup. enviado / Pendiente</span>
+          <span class="kanban-title" style="color:#0097a7">Presup. enviado</span>
           <span class="kanban-badge" id="cnt-presupuesto_enviado">0</span>
         </div>
         <div class="kanban-body" id="body-presupuesto_enviado"></div>
       </div>
-
-      <!-- COLUMNA 2: EN REPARACIÓN (ahora segunda) -->
       <div class="kanban-col">
         <div class="kanban-header">
           <span class="kanban-title" style="color:#1a9e50">En reparación</span>
@@ -383,8 +491,6 @@ main { flex:1; padding:28px; }
         </div>
         <div class="kanban-body" id="body-en_reparacion"></div>
       </div>
-
-      <!-- COLUMNA 3: ENTREGADO -->
       <div class="kanban-col">
         <div class="kanban-header">
           <span class="kanban-title" style="color:#6b7280">Entregado</span>
@@ -392,7 +498,96 @@ main { flex:1; padding:28px; }
         </div>
         <div class="kanban-body" id="body-entregado"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- NUEVA PÁGINA: CAMBIO DE ACEITE -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <div id="page-aceite" class="page">
+    <div class="page-header">
+      <div class="page-title">Tarjeta de Cambio de Aceite</div>
+      <button class="btn btn-oil" onclick="generarPDFAceite()">📄 Generar PDF</button>
+    </div>
+
+    <!-- Vista previa de la tarjeta -->
+    <div class="oil-card-preview" id="oil-preview">
+      <div class="oil-card-header">
+        <div class="oil-card-logo">B</div>
+        <div>
+          <div class="oil-card-brand"><span>B</span>Garage</div>
+          <div class="oil-card-sub">Taller Automotriz · Concepción</div>
+        </div>
+      </div>
       
+      <div class="oil-card-row">
+        <span class="oil-card-label">Fecha de Cambio</span>
+        <span class="oil-card-value highlight" id="preview-fecha">—</span>
+      </div>
+      
+      <div class="oil-card-row">
+        <span class="oil-card-label">Vehículo</span>
+        <span class="oil-card-value" id="preview-vehiculo">—</span>
+      </div>
+      
+      <div class="oil-card-row">
+        <span class="oil-card-label">Patente</span>
+        <span class="oil-card-value" id="preview-patente">—</span>
+      </div>
+      
+      <div class="oil-card-row">
+        <span class="oil-card-label">Kilometraje Actual</span>
+        <span class="oil-card-value" id="preview-km-actual">—</span>
+      </div>
+      
+      <div class="oil-card-row">
+        <span class="oil-card-label">Próximo Cambio</span>
+        <span class="oil-card-value highlight" id="preview-km-proximo">—</span>
+      </div>
+      
+      <div class="oil-card-row">
+        <span class="oil-card-label">Aceite Utilizado</span>
+        <span class="oil-card-value" id="preview-aceite">—</span>
+      </div>
+      
+      <div class="oil-card-footer">
+        <div class="oil-card-stamp">✓ Servicio Certificado</div>
+      </div>
+    </div>
+
+    <!-- Formulario -->
+    <div class="card" style="max-width: 600px; margin: 0 auto;">
+      <div class="section-divider oil">Datos del Servicio</div>
+      <div class="oil-form-grid">
+        <div class="form-group">
+          <label class="form-label">Fecha de Cambio *</label>
+          <input class="form-input" type="date" id="oil-fecha" onchange="actualizarPreviewAceite()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Patente *</label>
+          <input class="form-input" id="oil-patente" placeholder="ABCD12" style="text-transform:uppercase" oninput="actualizarPreviewAceite()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Marca</label>
+          <input class="form-input" id="oil-marca" placeholder="Toyota" oninput="actualizarPreviewAceite()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Modelo</label>
+          <input class="form-input" id="oil-modelo" placeholder="Corolla" oninput="actualizarPreviewAceite()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">KM Actual *</label>
+          <input class="form-input" type="number" id="oil-km-actual" placeholder="85.000" oninput="actualizarPreviewAceite()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Próximo Cambio (KM) *</label>
+          <input class="form-input" type="number" id="oil-km-proximo" placeholder="135.000" oninput="actualizarPreviewAceite()">
+        </div>
+        <div class="form-group oil-form-full">
+          <label class="form-label">Aceite Utilizado *</label>
+          <input class="form-input" id="oil-tipo" placeholder="Ej: Castrol 5W-30 Full Synthetic" oninput="actualizarPreviewAceite()">
+        </div>
+      </div>
     </div>
   </div>
 </main>
@@ -526,9 +721,8 @@ main { flex:1; padding:28px; }
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Estado</label>
-          <!-- SELECT REORDENADO: Primero PRESUPUESTO ENVIADO (default para nuevas) -->
           <select class="form-select" id="rep-estado">
-            <option value="presupuesto_enviado" selected>Presupuesto enviado / Pendiente</option>
+            <option value="presupuesto_enviado" selected>Presupuesto enviado</option>
             <option value="en_reparacion">En reparación</option>
             <option value="entregado">Entregado</option>
           </select>
@@ -608,6 +802,10 @@ const fmtDate = s => {
   }
 };
 const padNum = n => String(n || 0).padStart(4, '0');
+const fmtKM = n => {
+  if (!n && n !== 0) return '—';
+  return Math.round(n).toLocaleString('es-CL') + ' km';
+};
 
 // Función segura para sanitizar strings
 const safeStr = (val, fallback = '—') => {
@@ -633,6 +831,12 @@ function showPage(name, btn) {
   btn.classList.add('active');
   if (name === 'presupuestos') loadPresupuestos();
   if (name === 'reparaciones') loadReparaciones();
+  // Inicializar fecha de aceite al entrar a la página
+  if (name === 'aceite') {
+    const hoy = new Date().toISOString().split('T')[0];
+    document.getElementById('oil-fecha').value = hoy;
+    actualizarPreviewAceite();
+  }
 }
 
 // ─── AUTH ─────────────────────────────────────────────────────────────────
@@ -734,6 +938,188 @@ function getItems(cid) {
 function sumItems(items) { 
   if (!Array.isArray(items)) return 0;
   return items.reduce((s, i) => s + (parseFloat(i?.valor) || 0), 0); 
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// NUEVO: FUNCIONES PARA CAMBIO DE ACEITE
+// ════════════════════════════════════════════════════════════════════════════
+
+function actualizarPreviewAceite() {
+  const fecha = document.getElementById('oil-fecha').value;
+  const patente = document.getElementById('oil-patente').value.trim().toUpperCase();
+  const marca = document.getElementById('oil-marca').value.trim();
+  const modelo = document.getElementById('oil-modelo').value.trim();
+  const kmActual = document.getElementById('oil-km-actual').value;
+  const kmProximo = document.getElementById('oil-km-proximo').value;
+  const aceite = document.getElementById('oil-tipo').value.trim();
+
+  // Actualizar preview visual
+  document.getElementById('preview-fecha').textContent = fecha ? fmtDate(fecha) : '—';
+  document.getElementById('preview-patente').textContent = patente || '—';
+  document.getElementById('preview-km-actual').textContent = kmActual ? fmtKM(kmActual) : '—';
+  document.getElementById('preview-km-proximo').textContent = kmProximo ? fmtKM(kmProximo) : '—';
+  document.getElementById('preview-aceite').textContent = aceite || '—';
+  
+  const vehiculo = [marca, modelo].filter(Boolean).join(' ');
+  document.getElementById('preview-vehiculo').textContent = vehiculo || '—';
+}
+
+function generarPDFAceite() {
+  // Validar campos obligatorios
+  const fecha = document.getElementById('oil-fecha').value;
+  const patente = document.getElementById('oil-patente').value.trim().toUpperCase();
+  const kmActual = document.getElementById('oil-km-actual').value;
+  const kmProximo = document.getElementById('oil-km-proximo').value;
+  const aceite = document.getElementById('oil-tipo').value.trim();
+
+  if (!fecha || !patente || !kmActual || !kmProximo || !aceite) {
+    toast('Completa todos los campos obligatorios (*)', false);
+    return;
+  }
+
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    toast('Error: Librería PDF no cargada', false);
+    return;
+  }
+
+  const marca = document.getElementById('oil-marca').value.trim();
+  const modelo = document.getElementById('oil-modelo').value.trim();
+  const vehiculo = [marca, modelo].filter(Boolean).join(' ') || 'No especificado';
+
+  const { jsPDF } = window.jspdf;
+  
+  // Crear PDF en formato tarjeta (más pequeño, tipo tarjeta de bolsillo)
+  // Usamos mm pero con dimensiones de tarjeta: 85mm x 55mm (tipo tarjeta de crédito grande)
+  const doc = new jsPDF({
+    unit: 'mm',
+    format: [85, 55], // Ancho x Alto
+    orientation: 'landscape'
+  });
+
+  const W = 85;
+  const H = 55;
+  const OIL_COLOR = [212, 160, 23]; // Color aceite/dorado
+  const DARK_BG = [26, 28, 32]; // Fondo oscuro
+
+  // Fondo oscuro con degradado sutil
+  doc.setFillColor(...DARK_BG);
+  doc.rect(0, 0, W, H, 'F');
+
+  // Línea decorativa dorada superior
+  doc.setDrawColor(...OIL_COLOR);
+  doc.setLineWidth(1.5);
+  doc.line(5, 3, W-5, 3);
+
+  // Logo/Icono de gota de aceite
+  doc.setFillColor(...OIL_COLOR);
+  // Dibujar gota de aceite estilizada
+  doc.ellipse(8, 10, 3, 3.5, 'F');
+  doc.triangle(8, 5, 5.5, 10, 10.5, 10, 'F');
+
+  // Texto BGarage
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.setTextColor(...OIL_COLOR);
+  doc.text('B', 13, 12);
+  doc.setTextColor(255, 255, 255);
+  doc.text('Garage', 17, 12);
+
+  // Subtítulo
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(5);
+  doc.setTextColor(156, 163, 175);
+  doc.text('TALLER AUTOMOTRIZ · CONCEPCIÓN', 13, 15);
+
+  // Línea separadora
+  doc.setDrawColor(60, 60, 70);
+  doc.setLineWidth(0.3);
+  doc.line(5, 18, W-5, 18);
+
+  // Datos principales en grid compacto
+  const leftCol = 5;
+  const rightCol = 45;
+  let y = 22;
+
+  // Fecha
+  doc.setFontSize(5);
+  doc.setTextColor(156, 163, 175);
+  doc.text('FECHA CAMBIO', leftCol, y);
+  doc.setFontSize(8);
+  doc.setTextColor(255, 255, 255);
+  doc.text(fmtDate(fecha), leftCol, y+4);
+
+  // Patente (destacada)
+  doc.setFontSize(5);
+  doc.setTextColor(156, 163, 175);
+  doc.text('PATENTE', rightCol, y);
+  doc.setFontSize(10);
+  doc.setTextColor(...OIL_COLOR);
+  doc.setFont('helvetica', 'bold');
+  doc.text(patente, rightCol, y+5);
+
+  y = 32;
+
+  // Vehículo
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(5);
+  doc.setTextColor(156, 163, 175);
+  doc.text('VEHÍCULO', leftCol, y);
+  doc.setFontSize(6);
+  doc.setTextColor(255, 255, 255);
+  const vehiculoLines = doc.splitTextToSize(vehiculo, 35);
+  doc.text(vehiculoLines, leftCol, y+4);
+
+  // KM Actual
+  doc.setFontSize(5);
+  doc.setTextColor(156, 163, 175);
+  doc.text('KM ACTUAL', rightCol, y);
+  doc.setFontSize(8);
+  doc.setTextColor(255, 255, 255);
+  doc.text(fmtKM(kmActual), rightCol, y+4);
+
+  y = 42;
+
+  // Próximo cambio (destacado)
+  doc.setFontSize(5);
+  doc.setTextColor(156, 163, 175);
+  doc.text('PRÓXIMO CAMBIO', leftCol, y);
+  doc.setFontSize(9);
+  doc.setTextColor(...OIL_COLOR);
+  doc.setFont('helvetica', 'bold');
+  doc.text(fmtKM(kmProximo), leftCol, y+5);
+
+  // Aceite
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(5);
+  doc.setTextColor(156, 163, 175);
+  doc.text('ACEITE', rightCol, y);
+  doc.setFontSize(5);
+  doc.setTextColor(255, 255, 255);
+  const aceiteLines = doc.splitTextToSize(aceite, 35);
+  doc.text(aceiteLines, rightCol, y+4);
+
+  // Sello de certificación
+  doc.setDrawColor(...OIL_COLOR);
+  doc.setLineWidth(0.5);
+  doc.roundedRect(W-22, H-12, 17, 8, 1, 1, 'S');
+  doc.setFontSize(4);
+  doc.setTextColor(...OIL_COLOR);
+  doc.text('CERTIFICADO', W-18, H-7, { align: 'center' });
+
+  // Línea decorativa inferior
+  doc.setDrawColor(...OIL_COLOR);
+  doc.setLineWidth(1.5);
+  doc.line(5, H-3, W-5, H-3);
+
+  // Guardar
+  const patenteSafe = patente.toLowerCase().replace(/[^a-z0-9]/g, '');
+  try {
+    doc.save(`aceite-${patenteSafe}-${fecha}.pdf`);
+    toast('Tarjeta de aceite generada ✓');
+  } catch (e) {
+    console.error('Error:', e);
+    toast('Error al generar tarjeta', false);
+  }
 }
 
 // ─── PRESUPUESTOS ─────────────────────────────────────────────────────────
@@ -845,17 +1231,9 @@ async function loadReparaciones() {
   try {
     const data = await api('/api/reparaciones');
     document.getElementById('rep-count').textContent = `(${data.length})`;
-    
-    // ═══════════════════════════════════════════════════════════════════════
-    // COLUMNAS REORDENADAS: 1. presupuesto_enviado → 2. en_reparacion → 3. entregado
-    // ═══════════════════════════════════════════════════════════════════════
     const cols = { presupuesto_enviado:[], en_reparacion:[], entregado:[] };
-    data.forEach(r => { 
-      if (cols[r.estado]) cols[r.estado].push(r); 
-      else cols.presupuesto_enviado.push(r); // Fallback a primera columna
-    });
+    data.forEach(r => { if (cols[r.estado]) cols[r.estado].push(r); else cols.presupuesto_enviado.push(r); });
 
-    // NUEVO ORDEN DE ITERACIÓN
     ['presupuesto_enviado', 'en_reparacion', 'entregado'].forEach(key => {
       const items = cols[key];
       document.getElementById('cnt-' + key).textContent = items.length;
@@ -890,12 +1268,7 @@ function abrirModalReparacion() {
   document.getElementById('modal-rep-title').textContent = 'Nueva reparación';
   ['cliente','telefono','marca','modelo','anio','patente','km','tipo','descripcion','notas']
     .forEach(f => document.getElementById('rep-' + f).value = '');
-  
-  // ═══════════════════════════════════════════════════════════════════════
-  // DEFAULT AHORA ES 'presupuesto_enviado' (primera columna del kanban)
-  // ═══════════════════════════════════════════════════════════════════════
   document.getElementById('rep-estado').value = 'presupuesto_enviado';
-  
   document.getElementById('rep-fecha-entrega').value = '';
   document.getElementById('rep-items').innerHTML = '';
   document.getElementById('rep-total').textContent = '$0';
