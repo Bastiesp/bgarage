@@ -471,35 +471,53 @@ main { flex:1; padding:28px; }
   </div>
 
   <!-- PÁGINA REPARACIONES -->
-  <div id="page-reparaciones" class="page">
-    <div class="page-header">
-      <div class="page-title">Reparaciones <span id="rep-count"></span></div>
-      <button class="btn btn-primary" onclick="abrirModalReparacion()">+ Nueva reparación</button>
+<div id="page-reparaciones" class="page">
+  <div class="page-header">
+    <div class="page-title">Reparaciones <span id="rep-count"></span></div>
+    <button class="btn btn-primary" onclick="abrirModalReparacion()">+ Nueva reparación</button>
+  </div>
+
+  <!-- SEMANA NAV -->
+  <div class="semana-nav">
+    <div class="semana-nav-left">
+      <button class="btn btn-secondary btn-sm" onclick="cambiarSemana(-1)">&#8592;</button>
+      <button class="btn btn-secondary btn-sm" onclick="cambiarSemana(1)" id="btn-semana-sig">&#8594;</button>
+      <button class="btn btn-secondary btn-sm" onclick="irSemanaActual()" id="btn-hoy">Hoy</button>
+      <span class="semana-label" id="semana-label">—</span>
     </div>
-    <div class="kanban">
-      <div class="kanban-col">
-        <div class="kanban-header">
-          <span class="kanban-title" style="color:#0097a7">Presup. enviado</span>
-          <span class="kanban-badge" id="cnt-presupuesto_enviado">0</span>
-        </div>
-        <div class="kanban-body" id="body-presupuesto_enviado"></div>
-      </div>
-      <div class="kanban-col">
-        <div class="kanban-header">
-          <span class="kanban-title" style="color:#1a9e50">En reparación</span>
-          <span class="kanban-badge" id="cnt-en_reparacion">0</span>
-        </div>
-        <div class="kanban-body" id="body-en_reparacion"></div>
-      </div>
-      <div class="kanban-col">
-        <div class="kanban-header">
-          <span class="kanban-title" style="color:#6b7280">Entregado</span>
-          <span class="kanban-badge" id="cnt-entregado">0</span>
-        </div>
-        <div class="kanban-body" id="body-entregado"></div>
-      </div>
+    <div class="semana-nav-right">
+      <label class="toggle-activos">
+        <input type="checkbox" id="chk-activos" onchange="toggleActivos(this.checked)">
+        <span class="toggle-slider"></span>
+        <span class="toggle-txt">Ver todos los activos</span>
+      </label>
     </div>
   </div>
+
+  <div class="kanban">
+    <div class="kanban-col">
+      <div class="kanban-header">
+        <span class="kanban-title" style="color:#0097a7">Presup. enviado</span>
+        <span class="kanban-badge" id="cnt-presupuesto_enviado">0</span>
+      </div>
+      <div class="kanban-body" id="body-presupuesto_enviado"></div>
+    </div>
+    <div class="kanban-col">
+      <div class="kanban-header">
+        <span class="kanban-title" style="color:#1a9e50">En reparación</span>
+        <span class="kanban-badge" id="cnt-en_reparacion">0</span>
+      </div>
+      <div class="kanban-body" id="body-en_reparacion"></div>
+    </div>
+    <div class="kanban-col">
+      <div class="kanban-header">
+        <span class="kanban-title" style="color:#6b7280">Entregado</span>
+        <span class="kanban-badge" id="cnt-entregado">0</span>
+      </div>
+      <div class="kanban-body" id="body-entregado"></div>
+    </div>
+  </div>
+</div>
 
   <!-- ═══════════════════════════════════════════════════════════════════════ -->
   <!-- NUEVA PÁGINA: CAMBIO DE ACEITE -->
