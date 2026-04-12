@@ -1,0 +1,2594 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BGarage — Sistema de Gestión</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Barlow+Condensed:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+/* ── VARIABLES ── */
+:root {
+  --bg:           #f2f4f6;
+  --surface:      #ffffff;
+  --surface2:     #f0f4f5;
+  --surface3:     #e3eef0;
+  --accent:       #0097a7;
+  --accent-light: #e0f4f7;
+  --accent-dark:  #006978;
+  --danger:       #c0392b;
+  --danger-light: rgba(192,57,43,.08);
+  --text:         #1a1c20;
+  --text2:        #6b7280;
+  --text3:        #9ca3af;
+  --border:       #e2e5ea;
+  --radius:       10px;
+  --shadow:       0 1px 4px rgba(0,0,0,.07);
+  --shadow-md:    0 4px 16px rgba(0,0,0,.10);
+  --oil:          #d4a017;
+  --oil-light:    #f9f3e3;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Barlow',sans-serif;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── LOGIN ── */
+#login-screen {
+  position:fixed; inset:0; z-index:2000;
+  background:linear-gradient(135deg, #e8f5f7 0%, #f2f4f6 60%, #e0f4f7 100%);
+  display:flex; align-items:center; justify-content:center; padding:20px;
+}
+.login-box {
+  width:100%; max-width:420px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:44px 40px;
+  box-shadow:0 12px 48px rgba(0,151,167,.13);
+}
+.login-logo {
+  display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:6px;
+}
+.login-logo-text {
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:2rem; font-weight:800; letter-spacing:.06em; color:var(--text);
+}
+.login-logo-text span { color:var(--accent); }
+.login-sub { text-align:center; font-size:.82rem; color:var(--text3); margin-bottom:32px; letter-spacing:.04em; text-transform:uppercase; }
+.login-error {
+  background:var(--danger-light);
+  border:1px solid rgba(192,57,43,.25);
+  border-radius:8px;
+  padding:10px 14px;
+  font-size:.84rem;
+  color:var(--danger);
+  margin-bottom:16px;
+  display:none;
+}
+.field-label { display:block; font-size:.72rem; font-weight:700; color:var(--text2); margin-bottom:7px; letter-spacing:.08em; text-transform:uppercase; }
+.field-input {
+  width:100%; padding:11px 14px; border-radius:8px;
+  background:var(--surface2); border:1px solid var(--border);
+  color:var(--text); font-family:'Barlow',sans-serif; font-size:.93rem;
+  outline:none; transition:border-color .18s, box-shadow .18s;
+}
+.field-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,151,167,.1); }
+.field-input::placeholder { color:var(--text3); }
+.login-btn {
+  width:100%; padding:13px; margin-top:8px;
+  border-radius:10px; border:none; cursor:pointer;
+  background:var(--accent); color:#fff;
+  font-size:.95rem; font-weight:700; font-family:'Barlow',sans-serif;
+  letter-spacing:.04em; text-transform:uppercase;
+  transition:all .2s;
+}
+.login-btn:hover:not(:disabled) { background:var(--accent-dark); transform:translateY(-1px); box-shadow:0 4px 16px rgba(0,151,167,.3); }
+.login-btn:disabled { opacity:.6; cursor:not-allowed; }
+.login-footer { text-align:center; font-size:.74rem; color:var(--text3); margin-top:20px; }
+
+/* ── TOPBAR ── */
+.topbar {
+  display:flex; align-items:center; gap:16px; padding:0 28px;
+  height:60px; background:var(--surface); border-bottom:1px solid var(--border);
+  position:sticky; top:0; z-index:100; box-shadow:var(--shadow);
+}
+.logo { display:flex; align-items:center; gap:10px; text-decoration:none; }
+.logo-text {
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:1.5rem; font-weight:800; letter-spacing:.06em; color:var(--text);
+}
+.logo-text span { color:var(--accent); }
+.nav { display:flex; gap:4px; margin-left:auto; }
+.nav-btn {
+  padding:7px 16px; border-radius:7px;
+  font-size:.82rem; font-weight:600; cursor:pointer;
+  border:none; background:none; color:var(--text2);
+  transition:all .18s; letter-spacing:.03em;
+}
+.nav-btn:hover { background:var(--accent-light); color:var(--accent); }
+.nav-btn.active { background:var(--accent-light); color:var(--accent); }
+.nav-right { display:flex; align-items:center; gap:10px; }
+.user-badge { font-size:.82rem; color:var(--text2); font-weight:500; }
+.logout-btn {
+  padding:6px 14px; border-radius:7px; font-size:.82rem;
+  border:1px solid var(--border); background:none; color:var(--text3);
+  cursor:pointer; transition:all .18s;
+}
+.logout-btn:hover { border-color:var(--danger); color:var(--danger); }
+
+/* ── MAIN ── */
+main { flex:1; padding:28px; }
+.page { display:none; }
+.page.active { display:block; }
+.page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
+.page-title {
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:1.65rem; font-weight:700; letter-spacing:.04em;
+}
+.page-title span { color:var(--text3); font-weight:400; font-size:1rem; margin-left:8px; }
+
+/* ── BUTTONS ── */
+.btn {
+  padding:9px 20px; border-radius:8px; font-size:.84rem; font-weight:700;
+  cursor:pointer; border:none; transition:all .18s; letter-spacing:.03em;
+  display:inline-flex; align-items:center; gap:7px; font-family:'Barlow',sans-serif;
+}
+.btn-primary { background:var(--accent); color:#fff; }
+.btn-primary:hover { background:var(--accent-dark); }
+.btn-secondary { background:var(--surface); color:var(--text2); border:1px solid var(--border); }
+.btn-secondary:hover { color:var(--accent); border-color:var(--accent); }
+.btn-danger { background:var(--danger-light); color:var(--danger); border:1px solid rgba(192,57,43,.2); }
+.btn-danger:hover { background:rgba(192,57,43,.15); }
+.btn-oil { background:var(--oil); color:#fff; }
+.btn-oil:hover { background:#b88a0f; }
+.btn-sm { padding:5px 13px; font-size:.77rem; }
+.btn-icon { padding:6px 10px; font-size:.85rem; }
+
+/* ── CARDS ── */
+.cards-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:16px; }
+.card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius); padding:18px 20px;
+  transition:box-shadow .18s, border-color .18s;
+}
+.card:hover { border-color:var(--accent); box-shadow:0 2px 14px rgba(0,151,167,.1); }
+.card-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:12px; }
+.card-num { font-family:'Barlow Condensed',sans-serif; font-size:.77rem; font-weight:700; letter-spacing:.1em; color:var(--text3); text-transform:uppercase; }
+.card-title { font-size:1rem; font-weight:600; color:var(--text); margin-top:2px; }
+.card-sub { font-size:.82rem; color:var(--text2); margin-top:2px; }
+.card-actions { display:flex; gap:6px; flex-shrink:0; }
+.card-footer { display:flex; align-items:center; justify-content:space-between; margin-top:14px; padding-top:14px; border-top:1px solid var(--border); }
+.card-total { font-family:'Barlow Condensed',sans-serif; font-size:1.2rem; font-weight:700; color:var(--accent); }
+.card-note { font-size:.75rem; color:var(--text3); max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* ── KANBAN ── */
+.kanban { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; align-items:start; }
+.kanban-col { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+.kanban-header { padding:13px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.kanban-title { font-family:'Barlow Condensed',sans-serif; font-size:.88rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+.kanban-badge { font-size:.72rem; background:var(--surface2); padding:2px 9px; border-radius:99px; color:var(--text2); font-weight:600; }
+.kanban-body { padding:12px; display:flex; flex-direction:column; gap:10px; min-height:80px; }
+.kcard {
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:9px; padding:13px 14px; cursor:pointer;
+  transition:box-shadow .18s, border-color .18s;
+}
+.kcard:hover { border-color:var(--accent); box-shadow:0 2px 10px rgba(0,151,167,.1); }
+.kc-patente { font-family:'Barlow Condensed',sans-serif; font-size:.72rem; font-weight:800; letter-spacing:.14em; color:var(--accent); text-transform:uppercase; }
+.kc-auto { font-size:.9rem; font-weight:600; margin-top:3px; }
+.kc-tipo { font-size:.78rem; color:var(--text2); margin-top:3px; }
+.kc-owner { font-size:.75rem; color:var(--text3); margin-top:6px; }
+.kc-total { font-size:.85rem; font-weight:700; color:var(--accent); margin-top:5px; }
+.kc-actions { display:flex; gap:6px; margin-top:10px; }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position:fixed; inset:0; z-index:500;
+  background:rgba(0,0,0,.38); backdrop-filter:blur(4px);
+  display:none; align-items:flex-start; justify-content:center;
+  padding:24px 20px; overflow-y:auto;
+}
+.modal-overlay.open { display:flex; }
+.modal {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:16px; width:100%; max-width:740px;
+  animation:slideUp .22s ease; margin:auto;
+  box-shadow:0 24px 64px rgba(0,0,0,.18);
+}
+@keyframes slideUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+.modal-header { display:flex; align-items:center; justify-content:space-between; padding:22px 26px 0; }
+.modal-title { font-family:'Barlow Condensed',sans-serif; font-size:1.35rem; font-weight:700; letter-spacing:.04em; }
+.modal-close { background:none; border:none; color:var(--text3); font-size:1.2rem; cursor:pointer; padding:4px 8px; border-radius:6px; line-height:1; }
+.modal-close:hover { background:var(--surface2); color:var(--text); }
+.modal-body { padding:22px 26px; }
+.modal-footer { padding:16px 26px 22px; display:flex; gap:10px; justify-content:flex-end; border-top:1px solid var(--border); }
+
+/* ── FORM ── */
+.form-row   { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.form-row-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+.form-group { margin-bottom:14px; }
+.form-label { display:block; font-size:.72rem; font-weight:700; color:var(--text2); margin-bottom:6px; letter-spacing:.08em; text-transform:uppercase; }
+.form-input, .form-select, .form-textarea {
+  width:100%; padding:9px 12px; border-radius:7px;
+  background:var(--surface2); border:1px solid var(--border);
+  color:var(--text); font-family:'Barlow',sans-serif; font-size:.9rem;
+  outline:none; transition:border-color .18s, box-shadow .18s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,151,167,.08);
+}
+.form-input::placeholder, .form-textarea::placeholder { color:var(--text3); }
+.form-textarea { resize:vertical; min-height:72px; }
+.form-select option { background:var(--surface); }
+
+/* ── ITEMS ── */
+.items-header {
+  display:grid; grid-template-columns:1fr 95px 110px 36px;
+  gap:8px; padding:6px 8px;
+  font-size:.7rem; font-weight:700; color:var(--text3);
+  letter-spacing:.08em; text-transform:uppercase;
+}
+.item-row {
+  display:grid; grid-template-columns:1fr 95px 110px 36px;
+  gap:8px; margin-bottom:8px; align-items:start;
+}
+.item-row input, .item-row textarea {
+  padding:8px 10px; border-radius:7px;
+  background:var(--surface2); border:1px solid var(--border);
+  color:var(--text); font-family:'Barlow',sans-serif; font-size:.85rem;
+  outline:none; transition:border-color .18s; width:100%;
+}
+.item-row input:focus, .item-row textarea:focus { border-color:var(--accent); }
+.item-row textarea { resize:vertical; min-height:58px; line-height:1.45; }
+.item-tipo-label {
+  padding:8px 6px; border-radius:7px;
+  font-size:.73rem; font-weight:700; text-align:center; line-height:1.3;
+}
+.item-valor-input { text-align:right; }
+.remove-item {
+  background:none; border:none; color:var(--text3);
+  cursor:pointer; font-size:1.1rem; padding:6px 4px; border-radius:5px;
+  transition:color .15s;
+}
+.remove-item:hover { color:var(--danger); }
+.items-add { margin-top:6px; display:flex; gap:8px; }
+.items-total {
+  margin-top:12px; padding-top:12px; border-top:1px solid var(--border);
+  display:flex; justify-content:flex-end; align-items:center; gap:14px;
+}
+.items-total-label { font-size:.84rem; color:var(--text2); }
+.items-total-value { font-family:'Barlow Condensed',sans-serif; font-size:1.45rem; font-weight:700; color:var(--accent); }
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* NUEVO: ESTILOS PARA TARJETA DE CAMBIO DE ACEITE */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+.oil-card-preview {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 0;
+  color: var(--text);
+  max-width: 400px;
+  margin: 0 auto 24px;
+  box-shadow: 0 8px 32px rgba(0,151,167,.13);
+  overflow: hidden;
+}
+.oil-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 22px;
+  background: var(--accent);
+  border-bottom: none;
+  margin-bottom: 0;
+}
+.oil-card-logo {
+  width: 42px;
+  height: 42px;
+  background: rgba(255,255,255,.2);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 1.5rem;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+.oil-card-brand {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: .05em;
+  color: #ffffff;
+}
+.oil-card-brand span { color: #ffffff; font-weight: 800; }
+.oil-card-sub {
+  font-size: .7rem;
+  color: rgba(255,255,255,.75);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+}
+.oil-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 11px 22px;
+  border-bottom: 1px solid var(--border);
+}
+.oil-card-row:last-of-type { border-bottom: none; }
+.oil-card-label {
+  font-size: .72rem;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-weight: 600;
+}
+.oil-card-value {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.oil-card-value.highlight { color: var(--accent); font-size: 1.1rem; font-weight: 700; }
+.oil-card-footer {
+  padding: 12px 22px;
+  border-top: 2px solid var(--accent);
+  text-align: center;
+  background: var(--accent-light);
+}
+.oil-card-stamp {
+  display: inline-block;
+  padding: 5px 16px;
+  background: transparent;
+  border: 1.5px solid var(--accent);
+  border-radius: 6px;
+  font-size: .75rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+}
+
+/* Formulario de aceite */
+.oil-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.oil-form-full { grid-column: 1 / -1; }
+
+/* ── MISC ── */
+.section-divider {
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:.75rem; font-weight:700; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--accent);
+  margin:20px 0 10px;
+  display:flex; align-items:center; gap:10px;
+}
+.section-divider::after { content:''; flex:1; height:1px; background:var(--accent-light); }
+.section-divider.oil { color: var(--oil); }
+.section-divider.oil::after { background: var(--oil-light); }
+.empty { text-align:center; padding:64px 20px; color:var(--text3); }
+.empty-icon { font-size:2.8rem; margin-bottom:12px; }
+.empty-title { font-size:1rem; font-weight:500; color:var(--text2); margin-bottom:4px; }
+.toast {
+  position:fixed; bottom:24px; right:24px; z-index:9000;
+  background:var(--surface); border:1px solid var(--border);
+  padding:11px 20px; border-radius:9px; font-size:.85rem; color:var(--text);
+  opacity:0; transform:translateY(10px); transition:all .25s;
+  pointer-events:none; box-shadow:var(--shadow-md); max-width:320px;
+}
+.toast.show { opacity:1; transform:translateY(0); }
+
+@media(max-width:900px) {
+  .kanban { grid-template-columns:1fr; }
+  .oil-form-grid { grid-template-columns: 1fr; }
+}
+@media(max-width:640px) {
+  .form-row, .form-row-3 { grid-template-columns:1fr; }
+  .cards-grid { grid-template-columns:1fr; }
+  .topbar { padding:0 16px; }
+  main { padding:18px 14px; }
+  .items-header, .item-row { grid-template-columns:1fr 80px 88px 30px; }
+  .oil-card-preview { padding: 24px; }
+  .semana-nav { flex-direction:column; align-items:flex-start; }
+}
+
+/* ── SEMANA NAV ── */
+.semana-nav {
+  display:flex; align-items:center; justify-content:space-between;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius); padding:10px 16px; margin-bottom:16px;
+  flex-wrap:wrap; gap:10px;
+}
+.semana-nav-left { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.semana-nav-right { display:flex; align-items:center; }
+.semana-label {
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:1rem; font-weight:700; color:var(--text);
+  letter-spacing:.03em; padding-left:4px;
+}
+.semana-label.actual { color:var(--accent); }
+.toggle-activos {
+  display:flex; align-items:center; gap:8px; cursor:pointer;
+  font-size:.82rem; color:var(--text2); user-select:none;
+}
+.toggle-activos input { display:none; }
+.toggle-slider {
+  width:34px; height:18px; background:var(--border);
+  border-radius:99px; position:relative; transition:background .2s; flex-shrink:0;
+}
+.toggle-slider::after {
+  content:''; position:absolute; width:12px; height:12px;
+  background:#fff; border-radius:50%; top:3px; left:3px;
+  transition:transform .2s; box-shadow:0 1px 3px rgba(0,0,0,.2);
+}
+.toggle-activos input:checked + .toggle-slider { background:var(--accent); }
+.toggle-activos input:checked + .toggle-slider::after { transform:translateX(16px); }
+.kcard.foraneo { border-left:3px solid var(--oil); }
+.kc-semana { font-size:.7rem; color:var(--oil); font-weight:600; margin-top:3px; }
+
+/* ── BUSCADOR ── */
+.search-bar {
+  position:relative; margin-bottom:20px;
+}
+.search-input {
+  width:100%; padding:10px 16px 10px 40px;
+  border-radius:9px; border:1px solid var(--border);
+  background:var(--surface); color:var(--text);
+  font-family:'Barlow',sans-serif; font-size:.92rem;
+  outline:none; transition:border-color .18s, box-shadow .18s;
+}
+.search-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,151,167,.08); }
+.search-input::placeholder { color:var(--text3); }
+.search-icon {
+  position:absolute; left:13px; top:50%; transform:translateY(-50%);
+  color:var(--text3); font-size:1rem; pointer-events:none;
+}
+.search-clear {
+  position:absolute; right:12px; top:50%; transform:translateY(-50%);
+  background:none; border:none; color:var(--text3); cursor:pointer;
+  font-size:1rem; padding:2px 6px; border-radius:5px; display:none;
+  transition:color .15s;
+}
+.search-clear:hover { color:var(--text); }
+.search-count {
+  font-size:.78rem; color:var(--text3); margin-top:-12px; margin-bottom:16px;
+}
+.search-count span { color:var(--accent); font-weight:600; }
+
+/* ── HISTORIAL ── */
+.hist-info-grid {
+  display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:4px;
+}
+.hist-info-box {
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:8px; padding:10px 13px;
+}
+.hist-info-label { font-size:.68rem; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:.08em; margin-bottom:4px; }
+.hist-info-value { font-size:.95rem; font-weight:600; color:var(--text); }
+.hist-info-value.accent { color:var(--accent); font-family:'Barlow Condensed',sans-serif; font-size:1.15rem; letter-spacing:.1em; }
+.hist-readonly-field {
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:7px; padding:9px 12px; font-size:.9rem; color:var(--text);
+  min-height:36px; line-height:1.5;
+}
+
+/* DTC tags */
+.dtc-input-row { display:flex; gap:8px; align-items:center; margin-bottom:10px; }
+.dtc-input-row .form-input { flex:1; }
+.dtc-tags { display:flex; flex-wrap:wrap; gap:7px; }
+.dtc-tag {
+  display:inline-flex; align-items:center; gap:6px;
+  background:rgba(0,151,167,.1); border:1px solid rgba(0,151,167,.3);
+  color:var(--accent); border-radius:99px;
+  font-size:.78rem; font-weight:700; padding:3px 12px 3px 10px;
+  font-family:'Barlow Condensed',sans-serif; letter-spacing:.08em; text-transform:uppercase;
+}
+.dtc-tag button {
+  background:none; border:none; cursor:pointer;
+  color:var(--accent); font-size:.85rem; padding:0; line-height:1;
+  opacity:.6; transition:opacity .15s;
+}
+.dtc-tag button:hover { opacity:1; }
+.dtc-empty { font-size:.82rem; color:var(--text3); font-style:italic; }
+
+/* Piezas cambiadas en historial */
+.hv-item {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:8px 12px; border-radius:7px; margin-bottom:6px;
+  background:var(--surface2); border:1px solid var(--border);
+}
+.hv-item-desc { font-size:.88rem; color:var(--text); flex:1; }
+.hv-item-tipo {
+  font-size:.7rem; font-weight:700; border-radius:99px; padding:2px 9px;
+  margin: 0 10px;
+}
+.hv-item-tipo.mo  { background:#e0f4f7; color:var(--accent); }
+.hv-item-tipo.rep { background:#eaf4ff; color:#2980b9; }
+.hv-item-valor { font-size:.88rem; font-weight:700; color:var(--text); min-width:80px; text-align:right; }
+
+/* Fotos */
+.fotos-upload-area { display:flex; align-items:center; gap:14px; margin-bottom:14px; }
+.fotos-upload-btn {
+  display:inline-flex; align-items:center; gap:7px;
+  padding:8px 18px; border-radius:8px; font-size:.84rem; font-weight:700;
+  background:var(--surface); color:var(--text2); border:1px solid var(--border);
+  cursor:pointer; transition:all .18s; font-family:'Barlow',sans-serif;
+}
+.fotos-upload-btn:hover { border-color:var(--accent); color:var(--accent); }
+.fotos-upload-hint { font-size:.76rem; color:var(--text3); }
+.fotos-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:10px; }
+.foto-thumb {
+  position:relative; aspect-ratio:1; border-radius:9px; overflow:hidden;
+  border:1px solid var(--border); background:var(--surface2);
+  cursor:pointer; transition:border-color .18s;
+}
+.foto-thumb:hover { border-color:var(--accent); }
+.foto-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+.foto-thumb .foto-del {
+  position:absolute; top:5px; right:5px;
+  background:rgba(0,0,0,.55); color:#fff; border:none; border-radius:50%;
+  width:22px; height:22px; font-size:.75rem; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; transition:opacity .15s;
+}
+.foto-thumb:hover .foto-del { opacity:1; }
+.foto-uploading {
+  display:flex; align-items:center; justify-content:center;
+  aspect-ratio:1; border-radius:9px; background:var(--surface2);
+  border:1px dashed var(--border); color:var(--text3); font-size:.75rem;
+}
+
+/* Historial card badge DTC */
+.card-dtc { display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; }
+.card-dtc-tag {
+  font-size:.68rem; font-weight:700; background:rgba(0,151,167,.09);
+  border:1px solid rgba(0,151,167,.2); color:var(--accent);
+  border-radius:99px; padding:1px 8px;
+  font-family:'Barlow Condensed',sans-serif; letter-spacing:.06em;
+}
+.card-fotos-count { font-size:.74rem; color:var(--text3); display:flex; align-items:center; gap:4px; }
+
+/* Lightbox */
+.lightbox {
+  position:fixed; inset:0; z-index:2000; background:rgba(0,0,0,.88);
+  display:none; align-items:center; justify-content:center;
+}
+.lightbox.open { display:flex; }
+.lightbox img { max-width:90vw; max-height:90vh; border-radius:8px; }
+.lightbox-close {
+  position:absolute; top:20px; right:24px; color:#fff; font-size:1.8rem;
+  background:none; border:none; cursor:pointer; line-height:1;
+}
+
+@media(max-width:640px) {
+  .hist-info-grid { grid-template-columns:1fr 1fr; }
+  .fotos-grid { grid-template-columns:repeat(3,1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════ LOGIN ══════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+        <rect width="40" height="40" rx="10" fill="#0097a7" opacity=".12"/>
+        <path d="M29 8C26.2 5.5 21.5 6 19.2 8.8C17.3 11 17.5 14.2 19.2 16L8.8 26.4C7.6 27.6 7.6 29.6 8.8 30.8L9.2 31.2C10.4 32.4 12.4 32.4 13.6 31.2L24 20.8C25.8 22.5 29.2 22.7 31.5 20.8C34.2 18.6 34.8 13.6 32 11L28.8 14.2H26.5V11.9Z" fill="#0097a7" opacity=".9"/>
+        <circle cx="27" cy="11.5" r="2.2" fill="white" opacity=".7"/>
+      </svg>
+      <span class="login-logo-text"><span>B</span>Garage</span>
+    </div>
+    <div class="login-sub">Sistema de Gestión · Taller Automotriz</div>
+    <div class="login-error" id="login-error"></div>
+    <div class="form-group">
+      <label class="field-label" for="login-user">Usuario</label>
+      <input class="field-input" id="login-user" placeholder="Ingresa tu usuario" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label class="field-label" for="login-pass">Contraseña</label>
+      <input class="field-input" type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Entrar</button>
+    <div class="login-footer">BGarage © 2025 — Creado por Bastiesp</div>
+  </div>
+</div>
+
+<!-- ══════════ APP ══════════ -->
+<div id="app" style="display:none;flex-direction:column;min-height:100vh;">
+
+<header class="topbar">
+  <div class="logo">
+    <svg width="34" height="34" viewBox="0 0 40 40" fill="none">
+      <rect width="40" height="40" rx="10" fill="#0097a7" opacity=".12"/>
+      <path d="M29 8C26.2 5.5 21.5 6 19.2 8.8C17.3 11 17.5 14.2 19.2 16L8.8 26.4C7.6 27.6 7.6 29.6 8.8 30.8L9.2 31.2C10.4 32.4 12.4 32.4 13.6 31.2L24 20.8C25.8 22.5 29.2 22.7 31.5 20.8C34.2 18.6 34.8 13.6 32 11L28.8 14.2H26.5V11.9Z" fill="#0097a7" opacity=".9"/>
+      <circle cx="27" cy="11.5" r="2.2" fill="white" opacity=".7"/>
+    </svg>
+    <span class="logo-text"><span>B</span>Garage</span>
+  </div>
+  <nav class="nav">
+    <button class="nav-btn active" onclick="showPage('presupuestos',this)">Presupuestos</button>
+    <button class="nav-btn" onclick="showPage('reparaciones',this)">Reparaciones</button>
+    <button class="nav-btn" onclick="showPage('aceite',this)">Cambio Aceite</button>
+    <button class="nav-btn" onclick="showPage('historial',this)">Historial</button>
+  </nav>
+  <div class="nav-right">
+    <span class="user-badge" id="user-badge"></span>
+    <button class="logout-btn" onclick="doLogout()">Cerrar sesión</button>
+  </div>
+</header>
+
+<main>
+  <!-- PÁGINA PRESUPUESTOS -->
+  <div id="page-presupuestos" class="page active">
+    <div class="page-header">
+      <div class="page-title">Presupuestos <span id="presup-count"></span></div>
+      <button class="btn btn-primary" onclick="abrirModalPresupuesto()">+ Nuevo presupuesto</button>
+    </div>
+    <div class="search-bar">
+      <span class="search-icon">&#128269;</span>
+      <input class="search-input" id="search-presup" placeholder="Buscar por patente o propietario…" oninput="filtrarPresupuestos(this.value)">
+      <button class="search-clear" id="clear-presup" onclick="limpiarBusqueda('presup')">✕</button>
+    </div>
+    <div class="search-count" id="count-presup" style="display:none">Mostrando <span id="count-presup-n">0</span> resultado(s)</div>
+    <div class="cards-grid" id="presupuestos-list"></div>
+  </div>
+
+  <!-- PÁGINA REPARACIONES -->
+  <div id="page-reparaciones" class="page">
+    <div class="page-header">
+      <div class="page-title">Reparaciones <span id="rep-count"></span></div>
+      <button class="btn btn-primary" onclick="abrirModalReparacion()">+ Nueva reparación</button>
+    </div>
+
+    <div class="search-bar">
+      <span class="search-icon">&#128269;</span>
+      <input class="search-input" id="search-rep" placeholder="Buscar por patente o propietario…" oninput="filtrarReparaciones(this.value)">
+      <button class="search-clear" id="clear-rep" onclick="limpiarBusqueda('rep')">✕</button>
+    </div>
+    <div class="search-count" id="count-rep" style="display:none">Mostrando <span id="count-rep-n">0</span> resultado(s)</div>
+
+    <!-- NAVEGADOR DE SEMANA -->
+    <div class="semana-nav">
+      <div class="semana-nav-left">
+        <button class="btn btn-secondary btn-sm" onclick="cambiarSemana(-1)">&#8592;</button>
+        <button class="btn btn-secondary btn-sm" id="btn-semana-sig" onclick="cambiarSemana(1)">&#8594;</button>
+        <button class="btn btn-secondary btn-sm" id="btn-hoy" onclick="irSemanaActual()">Hoy</button>
+        <span class="semana-label" id="semana-label">—</span>
+      </div>
+      <div class="semana-nav-right">
+        <label class="toggle-activos">
+          <input type="checkbox" id="chk-activos" onchange="toggleActivos(this.checked)">
+          <span class="toggle-slider"></span>
+          <span style="margin-left:4px">Ver todos los activos</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="kanban">
+      <div class="kanban-col">
+        <div class="kanban-header">
+          <span class="kanban-title" style="color:#0097a7">Presup. enviado</span>
+          <span class="kanban-badge" id="cnt-presupuesto_enviado">0</span>
+        </div>
+        <div class="kanban-body" id="body-presupuesto_enviado"></div>
+      </div>
+      <div class="kanban-col">
+        <div class="kanban-header">
+          <span class="kanban-title" style="color:#1a9e50">En reparación</span>
+          <span class="kanban-badge" id="cnt-en_reparacion">0</span>
+        </div>
+        <div class="kanban-body" id="body-en_reparacion"></div>
+      </div>
+      <div class="kanban-col">
+        <div class="kanban-header">
+          <span class="kanban-title" style="color:#6b7280">Entregado</span>
+          <span class="kanban-badge" id="cnt-entregado">0</span>
+        </div>
+        <div class="kanban-body" id="body-entregado"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- NUEVA PÁGINA: CAMBIO DE ACEITE -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <div id="page-aceite" class="page">
+    <div class="page-header">
+      <div class="page-title">Tarjeta de Cambio de Aceite</div>
+      <button class="btn btn-oil" onclick="generarPDFAceite()">📄 Generar PDF</button>
+    </div>
+
+    <!-- Vista previa de la tarjeta -->
+    <div class="oil-card-preview" id="oil-preview">
+      <div class="oil-card-header">
+        <div class="oil-card-logo">B</div>
+        <div>
+          <div class="oil-card-brand"><span>B</span>Garage</div>
+          <div class="oil-card-sub">Taller Automotriz · Concepción</div>
+        </div>
+      </div>
+      
+      <div class="oil-card-row">
+        <span class="oil-card-label">Fecha de Cambio</span>
+        <span class="oil-card-value highlight" id="preview-fecha">—</span>
+      </div>
+      
+      <div class="oil-card-row">
+        <span class="oil-card-label">Vehículo</span>
+        <span class="oil-card-value" id="preview-vehiculo">—</span>
+      </div>
+      
+      <div class="oil-card-row">
+        <span class="oil-card-label">Patente</span>
+        <span class="oil-card-value" id="preview-patente">—</span>
+      </div>
+      
+      <div class="oil-card-row">
+        <span class="oil-card-label">Kilometraje Actual</span>
+        <span class="oil-card-value" id="preview-km-actual">—</span>
+      </div>
+      
+      <div class="oil-card-row">
+        <span class="oil-card-label">Próximo Cambio</span>
+        <span class="oil-card-value highlight" id="preview-km-proximo">—</span>
+      </div>
+      
+      <div class="oil-card-row">
+        <span class="oil-card-label">Aceite Utilizado</span>
+        <span class="oil-card-value" id="preview-aceite">—</span>
+      </div>
+      
+      <div class="oil-card-footer">
+        <div class="oil-card-stamp">✓ Servicio Certificado</div>
+      </div>
+    </div>
+
+    <!-- Formulario -->
+    <div class="card" style="max-width: 600px; margin: 0 auto;">
+      <div class="section-divider oil">Datos del Servicio</div>
+      <div class="oil-form-grid">
+        <div class="form-group">
+          <label class="form-label">Fecha de Cambio *</label>
+          <input class="form-input" type="date" id="oil-fecha" onchange="actualizarPreviewAceite()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Patente *</label>
+          <input class="form-input" id="oil-patente" placeholder="ABCD12" style="text-transform:uppercase" oninput="actualizarPreviewAceite()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Marca</label>
+          <input class="form-input" id="oil-marca" placeholder="Toyota" oninput="actualizarPreviewAceite()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Modelo</label>
+          <input class="form-input" id="oil-modelo" placeholder="Corolla" oninput="actualizarPreviewAceite()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">KM Actual *</label>
+          <input class="form-input" type="number" id="oil-km-actual" placeholder="85.000" oninput="actualizarPreviewAceite()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Próximo Cambio (KM) *</label>
+          <input class="form-input" type="number" id="oil-km-proximo" placeholder="135.000" oninput="actualizarPreviewAceite()">
+        </div>
+        <div class="form-group oil-form-full">
+          <label class="form-label">Aceite Utilizado *</label>
+          <input class="form-input" id="oil-tipo" placeholder="Ej: Castrol 5W-30 Full Synthetic" oninput="actualizarPreviewAceite()">
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- PÁGINA HISTORIAL DE VEHÍCULOS -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <div id="page-historial" class="page">
+    <div class="page-header">
+      <div class="page-title">Historial de Vehículos <span id="historial-count"></span></div>
+    </div>
+    <div class="search-bar">
+      <span class="search-icon">&#128269;</span>
+      <input class="search-input" id="search-historial" placeholder="Buscar por patente o propietario…" oninput="filtrarHistorial(this.value)">
+      <button class="search-clear" id="clear-historial" onclick="limpiarBusqueda('historial')">✕</button>
+    </div>
+    <div class="search-count" id="count-historial" style="display:none">Mostrando <span id="count-historial-n">0</span> resultado(s)</div>
+    <div class="cards-grid" id="historial-list"></div>
+  </div>
+</main>
+</div>
+
+<!-- ══════════ MODAL PRESUPUESTO ══════════ -->
+<div class="modal-overlay" id="modal-presupuesto">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-presup-title">Nuevo presupuesto</span>
+      <button class="modal-close" onclick="cerrarModal('modal-presupuesto')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="presup-id">
+      <div class="section-divider">Datos del cliente</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nombre propietario *</label>
+          <input class="form-input" id="presup-cliente" placeholder="Ej: Juan Pérez">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Teléfono</label>
+          <input class="form-input" id="presup-telefono" placeholder="+56 9 XXXX XXXX">
+        </div>
+      </div>
+      <div class="section-divider">Vehículo</div>
+      <div class="form-row-3">
+        <div class="form-group">
+          <label class="form-label">Marca</label>
+          <input class="form-input" id="presup-marca" placeholder="Toyota">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Modelo</label>
+          <input class="form-input" id="presup-modelo" placeholder="Corolla">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Año</label>
+          <input class="form-input" id="presup-anio" placeholder="2018">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Patente</label>
+          <input class="form-input" id="presup-patente" placeholder="ABCD12" style="text-transform:uppercase">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Kilometraje</label>
+          <input class="form-input" id="presup-km" placeholder="85.000 km">
+        </div>
+      </div>
+      <div class="section-divider">Ítems del presupuesto</div>
+      <div class="items-header">
+        <span>Descripción</span><span>Tipo</span><span style="text-align:right">Valor</span><span></span>
+      </div>
+      <div id="presup-items"></div>
+      <div class="items-add">
+        <button class="btn btn-secondary btn-sm" onclick="agregarItem('presup-items','mano_obra')">+ Mano de obra</button>
+        <button class="btn btn-secondary btn-sm" onclick="agregarItem('presup-items','repuesto')">+ Repuesto</button>
+      </div>
+      <div class="items-total">
+        <span class="items-total-label">Total estimado</span>
+        <span class="items-total-value" id="presup-total">$0</span>
+      </div>
+      <div class="form-group" style="margin-top:16px">
+        <label class="form-label">Notas adicionales</label>
+        <textarea class="form-textarea" id="presup-notas" placeholder="Observaciones, condiciones, validez del presupuesto..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModal('modal-presupuesto')">Cancelar</button>
+      <button class="btn btn-secondary" onclick="guardarPresupuesto(false)">Guardar borrador</button>
+      <button class="btn btn-primary" onclick="guardarPresupuesto(true)">Guardar y generar PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MODAL REPARACIÓN ══════════ -->
+<div class="modal-overlay" id="modal-reparacion">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-rep-title">Nueva reparación</span>
+      <button class="modal-close" onclick="cerrarModal('modal-reparacion')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="rep-id">
+      <div class="section-divider">Propietario</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nombre propietario *</label>
+          <input class="form-input" id="rep-cliente" placeholder="Ej: Carlos Díaz">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Teléfono</label>
+          <input class="form-input" id="rep-telefono" placeholder="+56 9 XXXX XXXX">
+        </div>
+      </div>
+      <div class="section-divider">Vehículo</div>
+      <div class="form-row-3">
+        <div class="form-group">
+          <label class="form-label">Marca</label>
+          <input class="form-input" id="rep-marca" placeholder="Honda">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Modelo</label>
+          <input class="form-input" id="rep-modelo" placeholder="Civic">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Año</label>
+          <input class="form-input" id="rep-anio" placeholder="2020">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Patente</label>
+          <input class="form-input" id="rep-patente" placeholder="WXYZ34" style="text-transform:uppercase">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Kilometraje ingreso</label>
+          <input class="form-input" id="rep-km" placeholder="45.000 km">
+        </div>
+      </div>
+      <div class="section-divider">Reparación</div>
+      <div class="form-group">
+        <label class="form-label">Tipo de reparación *</label>
+        <input class="form-input" id="rep-tipo" placeholder="Ej: Cambio de frenos, afinamiento motor...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descripción / diagnóstico</label>
+        <textarea class="form-textarea" id="rep-descripcion" placeholder="Detalle del problema o diagnóstico..."></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Estado</label>
+          <select class="form-select" id="rep-estado">
+            <option value="presupuesto_enviado" selected>Presupuesto enviado</option>
+            <option value="en_reparacion">En reparación</option>
+            <option value="entregado">Entregado</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha entrega estimada</label>
+          <input class="form-input" type="date" id="rep-fecha-entrega">
+        </div>
+      </div>
+      <div class="section-divider">Ítems / Trabajos realizados</div>
+      <div class="items-header">
+        <span>Descripción</span><span>Tipo</span><span style="text-align:right">Valor</span><span></span>
+      </div>
+      <div id="rep-items"></div>
+      <div class="items-add">
+        <button class="btn btn-secondary btn-sm" onclick="agregarItem('rep-items','mano_obra')">+ Mano de obra</button>
+        <button class="btn btn-secondary btn-sm" onclick="agregarItem('rep-items','repuesto')">+ Repuesto</button>
+      </div>
+      <div class="items-total">
+        <span class="items-total-label">Total</span>
+        <span class="items-total-value" id="rep-total">$0</span>
+      </div>
+      <div class="form-group" style="margin-top:16px">
+        <label class="form-label">Observaciones finales</label>
+        <textarea class="form-textarea" id="rep-notas" placeholder="Recomendaciones, garantías, próximo servicio..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModal('modal-reparacion')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarReparacion()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ══════════ MODAL HISTORIAL ══════════ -->
+<div class="modal-overlay" id="modal-historial">
+  <div class="modal" style="max-width:820px">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-hist-title">Ficha de vehículo</span>
+      <button class="modal-close" onclick="cerrarModal('modal-historial')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="hist-id">
+
+      <!-- Info vehículo (read-only) -->
+      <div class="section-divider">Vehículo</div>
+      <div class="hist-info-grid">
+        <div class="hist-info-box">
+          <div class="hist-info-label">Patente</div>
+          <div class="hist-info-value accent" id="hv-patente">—</div>
+        </div>
+        <div class="hist-info-box">
+          <div class="hist-info-label">Vehículo</div>
+          <div class="hist-info-value" id="hv-auto">—</div>
+        </div>
+        <div class="hist-info-box">
+          <div class="hist-info-label">Propietario</div>
+          <div class="hist-info-value" id="hv-cliente">—</div>
+        </div>
+        <div class="hist-info-box">
+          <div class="hist-info-label">Teléfono</div>
+          <div class="hist-info-value" id="hv-telefono">—</div>
+        </div>
+        <div class="hist-info-box">
+          <div class="hist-info-label">KM ingreso</div>
+          <div class="hist-info-value" id="hv-km">—</div>
+        </div>
+        <div class="hist-info-box">
+          <div class="hist-info-label">Fecha entrega</div>
+          <div class="hist-info-value" id="hv-fecha">—</div>
+        </div>
+      </div>
+
+      <!-- Falla y diagnóstico (read-only) -->
+      <div class="section-divider">Diagnóstico</div>
+      <div class="form-group">
+        <label class="form-label">Título de la falla</label>
+        <div class="hist-readonly-field" id="hv-tipo">—</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descripción / diagnóstico</label>
+        <div class="hist-readonly-field" id="hv-descripcion">—</div>
+      </div>
+
+      <!-- Códigos DTC (editable) -->
+      <div class="section-divider">Códigos DTC</div>
+      <div class="form-group">
+        <label class="form-label">Agregar código</label>
+        <div class="dtc-input-row">
+          <input class="form-input" id="dtc-nuevo" placeholder="Ej: P0301, C1234…" style="text-transform:uppercase"
+            onkeydown="if(event.key==='Enter'||event.key===','){event.preventDefault();agregarDTC()}">
+          <button class="btn btn-secondary btn-sm" onclick="agregarDTC()">+ Agregar</button>
+        </div>
+        <div class="dtc-tags" id="dtc-tags"></div>
+      </div>
+
+      <!-- Servicio realizado (read-only desde la reparación) -->
+      <div class="section-divider">Servicio realizado</div>
+      <div id="hv-items-list"></div>
+
+      <!-- Fotos evidencia -->
+      <div class="section-divider">Fotos / Evidencia</div>
+      <div class="fotos-upload-area">
+        <label class="fotos-upload-btn" for="foto-input">
+          &#128247; Seleccionar foto
+          <input type="file" id="foto-input" accept="image/*" multiple style="display:none" onchange="subirFotos(this)">
+        </label>
+        <span class="fotos-upload-hint" id="fotos-upload-hint">Formatos: JPG, PNG, WEBP · Máx. 8 MB por foto</span>
+      </div>
+      <div class="fotos-grid" id="fotos-grid"></div>
+
+      <!-- Notas adicionales (editable) -->
+      <div class="section-divider">Notas adicionales</div>
+      <div class="form-group">
+        <textarea class="form-textarea" id="hist-notas" placeholder="Observaciones, recomendaciones futuras…" rows="3"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModal('modal-historial')">Cerrar</button>
+      <button class="btn btn-secondary" onclick="guardarYpdfFicha()">&#128196; Guardar y PDF</button>
+      <button class="btn btn-primary" onclick="guardarFicha()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ JAVASCRIPT ══════════ -->
+<script>
+'use strict';
+
+// ─── TOKEN ────────────────────────────────────────────────────────────────
+const Token = {
+  get()     { return sessionStorage.getItem('bg_token'); },
+  set(t)    { sessionStorage.setItem('bg_token', t); },
+  nombre()  { return sessionStorage.getItem('bg_nombre') || ''; },
+  setNombre(n){ sessionStorage.setItem('bg_nombre', n); },
+  clear()   { sessionStorage.removeItem('bg_token'); sessionStorage.removeItem('bg_nombre'); }
+};
+
+// ─── API HELPER ───────────────────────────────────────────────────────────
+async function api(path, opts = {}) {
+  const config = {
+    ...opts,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + Token.get(),
+      ...(opts.headers || {})
+    }
+  };
+  const res = await fetch(path, config);
+  if (res.status === 401) { doLogout(); throw new Error('Sesión expirada'); }
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Error del servidor');
+  return data;
+}
+
+// ─── UTILS ────────────────────────────────────────────────────────────────
+const fmt     = n => '$\u00a0' + Math.round(n || 0).toLocaleString('es-CL');
+const fmtDate = s => {
+  if (!s) return '—';
+  try {
+    const d = new Date(s);
+    if (isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString('es-CL', { day:'2-digit', month:'2-digit', year:'numeric' });
+  } catch (e) {
+    return '—';
+  }
+};
+const padNum = n => String(n || 0).padStart(4, '0');
+const fmtKM = n => {
+  if (!n && n !== 0) return '—';
+  return Math.round(n).toLocaleString('es-CL') + ' km';
+};
+
+// Función segura para sanitizar strings
+const safeStr = (val, fallback = '—') => {
+  if (val === null || val === undefined) return fallback;
+  const str = String(val).trim();
+  return str || fallback;
+};
+
+function toast(msg, ok = true) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderColor = ok ? 'rgba(0,151,167,.35)' : 'rgba(192,57,43,.35)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function cerrarModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'presupuestos') loadPresupuestos();
+  if (name === 'reparaciones') loadReparaciones();
+  // Inicializar fecha de aceite al entrar a la página
+  if (name === 'aceite') {
+    const hoy = new Date().toISOString().split('T')[0];
+    document.getElementById('oil-fecha').value = hoy;
+    actualizarPreviewAceite();
+  }
+  if (name === 'historial') loadHistorial();
+}
+
+// ─── AUTH ─────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const usuario = document.getElementById('login-user').value.trim();
+  const clave   = document.getElementById('login-pass').value;
+  const errEl   = document.getElementById('login-error');
+  const btnEl   = document.getElementById('login-btn');
+
+  errEl.style.display = 'none';
+  if (!usuario || !clave) {
+    errEl.textContent = 'Completa usuario y contraseña';
+    errEl.style.display = 'block'; return;
+  }
+  btnEl.disabled = true; btnEl.textContent = 'Ingresando...';
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usuario, clave })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      errEl.textContent = data.error || 'Error al iniciar sesión';
+      errEl.style.display = 'block'; return;
+    }
+    Token.set(data.token); Token.setNombre(data.nombre);
+    mostrarApp(data.nombre);
+    loadPresupuestos();
+  } catch(e) {
+    errEl.textContent = 'No se pudo conectar al servidor';
+    errEl.style.display = 'block';
+  } finally {
+    btnEl.disabled = false; btnEl.textContent = 'Entrar';
+  }
+}
+
+function mostrarApp(nombre) {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('user-badge').textContent = '👤 ' + nombre;
+  document.getElementById('login-pass').value = '';
+}
+
+function doLogout() {
+  Token.clear();
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-error').style.display = 'none';
+  document.querySelectorAll('.nav-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
+  document.querySelectorAll('.page').forEach((p, i)    => p.classList.toggle('active', i === 0));
+}
+
+// Restaurar sesión al recargar
+(function() {
+  if (Token.get() && Token.nombre()) { mostrarApp(Token.nombre()); loadPresupuestos(); }
+})();
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') doLogin();
+});
+
+// ─── ITEMS ────────────────────────────────────────────────────────────────
+function agregarItem(cid, tipo, desc = '', valor = '') {
+  const container = document.getElementById(cid);
+  const div = document.createElement('div');
+  div.className = 'item-row';
+  const esMO = tipo === 'mano_obra';
+  const ph = esMO ? 'Describa el trabajo realizado...' : 'Nombre del repuesto';
+  const campo = esMO
+    ? `<textarea class="item-desc" placeholder="${ph}" rows="2" oninput="calcTotal('${cid}')">${desc}</textarea>`
+    : `<input class="item-desc" type="text" placeholder="${ph}" value="${String(desc).replace(/"/g,'&quot;')}" oninput="calcTotal('${cid}')">`;
+  div.innerHTML = `${campo}
+    <div class="item-tipo-label" style="background:${esMO?'#e0f4f7':'#eaf4ff'};color:${esMO?'#0097a7':'#2980b9'}">${esMO?'Mano obra':'Repuesto'}</div>
+    <input class="item-valor-input" type="number" placeholder="0" value="${Number(valor)||''}" min="0" oninput="calcTotal('${cid}')" style="text-align:right">
+    <button class="remove-item" type="button" onclick="this.closest('.item-row').remove();calcTotal('${cid}')">✕</button>`;
+  container.appendChild(div);
+  calcTotal(cid);
+}
+
+function calcTotal(cid) {
+  const total = Array.from(document.getElementById(cid).querySelectorAll('.item-valor-input'))
+    .reduce((s, v) => s + parseFloat(v.value || 0), 0);
+  const pfx = cid === 'presup-items' ? 'presup' : 'rep';
+  document.getElementById(pfx + '-total').textContent = fmt(total);
+}
+
+function getItems(cid) {
+  return Array.from(document.getElementById(cid).querySelectorAll('.item-row')).map(r => {
+    const desc  = r.querySelector('.item-desc');
+    const valor = r.querySelector('.item-valor-input');
+    const tipo  = r.querySelector('.item-tipo-label').textContent.trim().includes('obra') ? 'mano_obra' : 'repuesto';
+    return { descripcion: (desc.value || desc.textContent || '').trim(), tipo, valor: parseFloat(valor.value || 0) };
+  }).filter(i => i.descripcion);
+}
+
+function sumItems(items) { 
+  if (!Array.isArray(items)) return 0;
+  return items.reduce((s, i) => s + (parseFloat(i?.valor) || 0), 0); 
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// NUEVO: FUNCIONES PARA CAMBIO DE ACEITE
+// ════════════════════════════════════════════════════════════════════════════
+
+function actualizarPreviewAceite() {
+  const fecha = document.getElementById('oil-fecha').value;
+  const patente = document.getElementById('oil-patente').value.trim().toUpperCase();
+  const marca = document.getElementById('oil-marca').value.trim();
+  const modelo = document.getElementById('oil-modelo').value.trim();
+  const kmActual = document.getElementById('oil-km-actual').value;
+  const kmProximo = document.getElementById('oil-km-proximo').value;
+  const aceite = document.getElementById('oil-tipo').value.trim();
+
+  // Actualizar preview visual
+  document.getElementById('preview-fecha').textContent = fecha ? fmtDate(fecha) : '—';
+  document.getElementById('preview-patente').textContent = patente || '—';
+  document.getElementById('preview-km-actual').textContent = kmActual ? fmtKM(kmActual) : '—';
+  document.getElementById('preview-km-proximo').textContent = kmProximo ? fmtKM(kmProximo) : '—';
+  document.getElementById('preview-aceite').textContent = aceite || '—';
+  
+  const vehiculo = [marca, modelo].filter(Boolean).join(' ');
+  document.getElementById('preview-vehiculo').textContent = vehiculo || '—';
+}
+
+function generarPDFAceite() {
+  // Validar campos obligatorios
+  const fecha = document.getElementById('oil-fecha').value;
+  const patente = document.getElementById('oil-patente').value.trim().toUpperCase();
+  const kmActual = document.getElementById('oil-km-actual').value;
+  const kmProximo = document.getElementById('oil-km-proximo').value;
+  const aceite = document.getElementById('oil-tipo').value.trim();
+
+  if (!fecha || !patente || !kmActual || !kmProximo || !aceite) {
+    toast('Completa todos los campos obligatorios (*)', false);
+    return;
+  }
+
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    toast('Error: Librería PDF no cargada', false);
+    return;
+  }
+
+  const marca = document.getElementById('oil-marca').value.trim();
+  const modelo = document.getElementById('oil-modelo').value.trim();
+  const vehiculo = [marca, modelo].filter(Boolean).join(' ') || 'No especificado';
+
+  const { jsPDF } = window.jspdf;
+
+  // Formato: 90x130mm portrait — proporciones similares a la tarjeta en pantalla
+  const doc = new jsPDF({ unit: 'mm', format: [90, 130], orientation: 'portrait' });
+
+  const W = 90;
+  const H = 130;
+  const ACC  = [0, 151, 167];      // calipso
+  const ACCD = [0, 105, 120];      // calipso oscuro
+  const ACCL = [224, 244, 247];    // calipso claro
+  const DARK = [26, 28, 32];       // texto oscuro
+  const GRAY = [107, 114, 128];    // texto gris (labels)
+  const BORD = [226, 229, 234];    // color borde
+
+  // ── Fondo blanco total ──────────────────────────────────────────────────
+  doc.setFillColor(255, 255, 255);
+  doc.rect(0, 0, W, H, 'F');
+
+  // ── Banda header calipso ────────────────────────────────────────────────
+  doc.setFillColor(...ACC);
+  doc.rect(0, 0, W, 26, 'F');
+
+  // Logo cuadrado blanco semitransparente
+  doc.setFillColor(255, 255, 255, 0.2);
+  doc.setDrawColor(255, 255, 255);
+  doc.setLineWidth(0.4);
+  doc.roundedRect(6, 5, 16, 16, 2, 2, 'FD');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.setTextColor(255, 255, 255);
+  doc.text('B', 14, 16, { align: 'center' });
+
+  // Nombre taller
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.setTextColor(255, 255, 255);
+  doc.text('BGarage', 26, 14);
+
+  // Subtítulo
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(5.5);
+  doc.setTextColor(210, 240, 243);
+  doc.text('TALLER AUTOMOTRIZ · CONCEPCIÓN', 26, 19.5);
+
+  // ── Filas de datos ───────────────────────────────────────────────────────
+  // Definir filas: [label, valorId, destacado]
+  const filas = [
+    { label: 'FECHA DE CAMBIO',    valor: fmtDate(fecha),       accent: true  },
+    { label: 'VEHÍCULO',           valor: vehiculo,              accent: false },
+    { label: 'PATENTE',            valor: patente,               accent: false },
+    { label: 'KILOMETRAJE ACTUAL', valor: fmtKM(kmActual),      accent: false },
+    { label: 'PRÓXIMO CAMBIO',     valor: fmtKM(kmProximo),     accent: true  },
+    { label: 'ACEITE UTILIZADO',   valor: aceite,               accent: false },
+  ];
+
+  const rowH   = 15;
+  const yStart = 28;
+
+  filas.forEach((fila, i) => {
+    const yRow = yStart + i * rowH;
+
+    // Línea separadora inferior de cada fila
+    doc.setDrawColor(...BORD);
+    doc.setLineWidth(0.25);
+    doc.line(6, yRow + rowH - 1, W - 6, yRow + rowH - 1);
+
+    // Label
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(5.5);
+    doc.setTextColor(...GRAY);
+    doc.text(fila.label, 8, yRow + 5.5);
+
+    // Valor
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(fila.accent ? 9 : 8);
+    doc.setTextColor(...(fila.accent ? ACC : DARK));
+    const valorLines = doc.splitTextToSize(String(fila.valor || '—'), W - 16);
+    doc.text(valorLines, W - 8, yRow + (valorLines.length > 1 ? 8 : 10), { align: 'right' });
+  });
+
+  // ── Footer calipso ───────────────────────────────────────────────────────
+  const yFooter = yStart + filas.length * rowH + 1;
+  doc.setFillColor(...ACCL);
+  doc.rect(0, yFooter, W, H - yFooter, 'F');
+  doc.setDrawColor(...ACC);
+  doc.setLineWidth(1.5);
+  doc.line(0, yFooter, W, yFooter);
+
+  // Sello "✓ Servicio Certificado"
+  doc.setDrawColor(...ACCD);
+  doc.setLineWidth(0.6);
+  const stampW = 55, stampH = 8, stampX = (W - stampW) / 2, stampY = yFooter + 5;
+  doc.roundedRect(stampX, stampY, stampW, stampH, 2, 2, 'S');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(6.5);
+  doc.setTextColor(...ACCD);
+  doc.text('✓  SERVICIO CERTIFICADO', W / 2, stampY + 5.5, { align: 'center' });
+
+  // Guardar
+  const patenteSafe = patente.toLowerCase().replace(/[^a-z0-9]/g, '');
+  try {
+    doc.save(`aceite-${patenteSafe}-${fecha}.pdf`);
+    toast('Tarjeta de aceite generada ✓');
+  } catch (e) {
+    console.error('Error:', e);
+    toast('Error al generar tarjeta', false);
+  }
+}
+
+// ─── BUSCADORES ───────────────────────────────────────────────────────────
+let _presupuestosCache = [];
+let _reparacionesCache = [];
+
+function matchBusqueda(texto, query) {
+  return texto.toLowerCase().includes(query.toLowerCase().trim());
+}
+
+function filtrarPresupuestos(query) {
+  const clearBtn = document.getElementById('clear-presup');
+  const countEl  = document.getElementById('count-presup');
+  const countN   = document.getElementById('count-presup-n');
+  clearBtn.style.display = query ? 'block' : 'none';
+
+  const datos = query
+    ? _presupuestosCache.filter(p =>
+        matchBusqueda(p.patente || '', query) ||
+        matchBusqueda(p.cliente || '', query))
+    : _presupuestosCache;
+
+  countEl.style.display = query ? 'block' : 'none';
+  if (query) countN.textContent = datos.length;
+  renderPresupuestos(datos);
+}
+
+function filtrarReparaciones(query) {
+  const clearBtn = document.getElementById('clear-rep');
+  const countEl  = document.getElementById('count-rep');
+  const countN   = document.getElementById('count-rep-n');
+  clearBtn.style.display = query ? 'block' : 'none';
+
+  // Si hay búsqueda activa, ignorar filtro de semana y mostrar todo
+  if (query) {
+    const datos = _reparacionesCache.filter(r =>
+      matchBusqueda(r.patente || '', query) ||
+      matchBusqueda(r.cliente || '', query));
+    countEl.style.display = 'block';
+    countN.textContent = datos.length;
+    renderKanban(datos);
+  } else {
+    countEl.style.display = 'none';
+    renderKanbanFiltrado(_reparacionesCache);
+  }
+}
+
+function limpiarBusqueda(tipo) {
+  const input = document.getElementById('search-' + tipo);
+  input.value = '';
+  if (tipo === 'presup') filtrarPresupuestos('');
+  else if (tipo === 'rep') filtrarReparaciones('');
+  else if (tipo === 'historial') filtrarHistorial('');
+  input.focus();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// HISTORIAL DE VEHÍCULOS
+// ════════════════════════════════════════════════════════════════════════════
+let _historialCache = [];
+let _dtcActuales    = [];
+
+async function loadHistorial() {
+  try {
+    const data = await api('/api/historial');
+    _historialCache = data;
+    const query = document.getElementById('search-historial')?.value || '';
+    filtrarHistorial(query);
+  } catch(e) { toast('Error cargando historial: ' + e.message, false); }
+}
+
+function filtrarHistorial(query) {
+  const clearBtn = document.getElementById('clear-historial');
+  const countEl  = document.getElementById('count-historial');
+  const countN   = document.getElementById('count-historial-n');
+  if (clearBtn) clearBtn.style.display = query ? 'block' : 'none';
+
+  const datos = query
+    ? _historialCache.filter(f =>
+        matchBusqueda(f.patente || '', query) ||
+        matchBusqueda(f.cliente || '', query))
+    : _historialCache;
+
+  if (countEl) countEl.style.display = query ? 'block' : 'none';
+  if (countN)  countN.textContent = datos.length;
+  renderHistorial(datos);
+}
+
+function renderHistorial(data) {
+  const list = document.getElementById('historial-list');
+  document.getElementById('historial-count').textContent = `(${_historialCache.length})`;
+
+  if (!data.length) {
+    const busqueda = document.getElementById('search-historial')?.value;
+    list.innerHTML = `<div class="empty" style="grid-column:1/-1">
+      <div class="empty-icon">&#128203;</div>
+      <div class="empty-title">${busqueda ? 'Sin resultados' : 'Sin fichas aún'}</div>
+      <div style="font-size:.82rem">${busqueda ? 'Intenta con otra patente o nombre' : 'Las fichas se crean automáticamente al entregar un vehículo'}</div>
+    </div>`; return;
+  }
+
+  list.innerHTML = data.map(f => {
+    const auto = [f.marca, f.modelo, f.anio].filter(Boolean).join(' ') || 'Vehículo';
+    const totalItems = (f.items || []).length;
+    const dtcHtml = (f.codigosDTC || []).length
+      ? `<div class="card-dtc">${f.codigosDTC.map(c => `<span class="card-dtc-tag">${c}</span>`).join('')}</div>`
+      : '';
+    const fotosCount = (f.fotos || []).length;
+    return `<div class="card" style="cursor:pointer" onclick="abrirFicha('${f._id}')">
+      <div class="card-header">
+        <div>
+          <div class="card-num">${fmtDate(f.fechaEntrega)}${f.numeroReparacion ? ' · Rep. #' + String(f.numeroReparacion).padStart(4,'0') : ''}</div>
+          <div class="card-title" style="font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;letter-spacing:.08em;color:var(--accent)">${f.patente || '—'}</div>
+          <div class="card-sub">${auto} · ${f.cliente || 'Sin propietario'}</div>
+        </div>
+        <div class="card-actions" onclick="event.stopPropagation()">
+          <button class="btn btn-icon btn-danger" onclick="eliminarFicha('${f._id}')" title="Eliminar">&#128465;</button>
+        </div>
+      </div>
+      <div style="font-size:.82rem;color:var(--text2);margin-top:4px">&#128295; ${f.tipo || 'Sin diagnóstico'}</div>
+      ${dtcHtml}
+      <div class="card-footer">
+        <span class="card-fotos-count">&#128247; ${fotosCount} foto${fotosCount !== 1 ? 's' : ''}</span>
+        <span style="font-size:.75rem;color:var(--text3)">${totalItems} pieza${totalItems !== 1 ? 's' : ''} cambiada${totalItems !== 1 ? 's' : ''}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function abrirFicha(id) {
+  try {
+    const f = await api('/api/historial/' + id);
+    document.getElementById('hist-id').value = f._id;
+    document.getElementById('modal-hist-title').textContent =
+      `Ficha — ${f.patente || '—'} · ${[f.marca,f.modelo].filter(Boolean).join(' ') || 'Vehículo'}`;
+
+    // Info vehículo
+    document.getElementById('hv-patente').textContent  = f.patente || '—';
+    document.getElementById('hv-auto').textContent     = [f.marca,f.modelo,f.anio].filter(Boolean).join(' ') || '—';
+    document.getElementById('hv-cliente').textContent  = f.cliente || '—';
+    document.getElementById('hv-telefono').textContent = f.telefono || '—';
+    document.getElementById('hv-km').textContent       = f.km || '—';
+    document.getElementById('hv-fecha').textContent    = fmtDate(f.fechaEntrega);
+    document.getElementById('hv-tipo').textContent     = f.tipo || '—';
+    document.getElementById('hv-descripcion').textContent = f.descripcion || '—';
+    document.getElementById('hist-notas').value        = f.notas || '';
+
+    // DTC tags
+    _dtcActuales = [...(f.codigosDTC || [])];
+    renderDTCTags();
+
+    // Piezas cambiadas
+    const itemsEl = document.getElementById('hv-items-list');
+    const items = f.items || [];
+    if (!items.length) {
+      itemsEl.innerHTML = '<div class="dtc-empty">Sin piezas registradas</div>';
+    } else {
+      itemsEl.innerHTML = items.map(i => `
+        <div class="hv-item">
+          <span class="hv-item-desc">${i.descripcion || '—'}</span>
+          <span class="hv-item-tipo ${i.tipo==='mano_obra'?'mo':'rep'}">${i.tipo==='mano_obra'?'Mano obra':'Repuesto'}</span>
+          <span class="hv-item-valor">${fmt(i.valor)}</span>
+        </div>`).join('');
+    }
+
+    // Fotos
+    renderFotos(f.fotos || []);
+
+    document.getElementById('modal-historial').classList.add('open');
+  } catch(e) { toast('Error cargando ficha: ' + e.message, false); }
+}
+
+function renderDTCTags() {
+  const el = document.getElementById('dtc-tags');
+  if (!_dtcActuales.length) {
+    el.innerHTML = '<span class="dtc-empty">Sin códigos DTC registrados</span>'; return;
+  }
+  el.innerHTML = _dtcActuales.map((c, i) => `
+    <span class="dtc-tag">${c}
+      <button onclick="quitarDTC(${i})" title="Quitar">✕</button>
+    </span>`).join('');
+}
+
+function agregarDTC() {
+  const input = document.getElementById('dtc-nuevo');
+  const val = input.value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (!val) return;
+  if (_dtcActuales.includes(val)) { toast('Ese código ya existe', false); return; }
+  _dtcActuales.push(val);
+  renderDTCTags();
+  input.value = '';
+  input.focus();
+}
+
+function quitarDTC(idx) {
+  _dtcActuales.splice(idx, 1);
+  renderDTCTags();
+}
+
+async function guardarFicha() {
+  const id = document.getElementById('hist-id').value;
+  if (!id) return;
+  try {
+    await api('/api/historial/' + id, {
+      method: 'PUT',
+      body: JSON.stringify({
+        codigosDTC: _dtcActuales,
+        notas: document.getElementById('hist-notas').value.trim(),
+      })
+    });
+    toast('Ficha guardada ✓');
+    loadHistorial();
+  } catch(e) { toast('Error guardando ficha: ' + e.message, false); }
+}
+
+async function guardarYpdfFicha() {
+  const id = document.getElementById('hist-id').value;
+  if (!id) return;
+  try {
+    const ficha = await api('/api/historial/' + id, {
+      method: 'PUT',
+      body: JSON.stringify({
+        codigosDTC: _dtcActuales,
+        notas: document.getElementById('hist-notas').value.trim(),
+      })
+    });
+    toast('Ficha guardada ✓');
+    loadHistorial();
+    setTimeout(() => generarPDFHistorial(ficha), 300);
+  } catch(e) { toast('Error guardando ficha: ' + e.message, false); }
+}
+
+function generarPDFHistorial(f) {
+  if (!f) { toast('No hay datos de la ficha', false); return; }
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    toast('Error: Librería PDF no cargada', false); return;
+  }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const W = 210, M = 18;
+
+  // Sanitizar
+  const patente    = safeStr(f.patente);
+  const cliente    = safeStr(f.cliente);
+  const telefono   = safeStr(f.telefono);
+  const marca      = safeStr(f.marca);
+  const modelo     = safeStr(f.modelo);
+  const anio       = safeStr(f.anio);
+  const km         = safeStr(f.km);
+  const tipo       = safeStr(f.tipo);
+  const descripcion = safeStr(f.descripcion);
+  const notas      = safeStr(f.notas);
+  const fechaEnt   = fmtDate(f.fechaEntrega || new Date());
+  const fechaIng   = fmtDate(f.fechaIngreso);
+  const items      = Array.isArray(f.items) ? f.items : [];
+  const dtcs       = Array.isArray(f.codigosDTC) ? f.codigosDTC : [];
+  const numRep     = f.numeroReparacion ? String(f.numeroReparacion).padStart(4,'0') : '—';
+
+  // ── Cabecera reutilizando pdfHeader ──────────────────────────────────────
+  pdfHeader(doc, W, M, 'HISTORIAL DE VEHÍCULO', `Rep. N° ${numRep}`, `Entrega: ${fechaEnt}`);
+
+  let y = 50;
+
+  // ── Bloque vehículo + propietario ─────────────────────────────────────────
+  const colW = (W - 2*M - 8) / 2;
+  pdfInfoBox(doc, M, y, colW, 38, 'PROPIETARIO', cliente, telefono, '');
+  pdfInfoBox(doc, M+colW+8, y, colW, 38, 'VEHÍCULO',
+    [marca, modelo, anio].filter(v => v && v !== '—').join(' ') || '—',
+    [patente !== '—' ? 'Patente: '+patente : '', km !== '—' ? 'KM: '+km : ''].filter(Boolean).join('   '),
+    `Ingreso: ${fechaIng}`
+  );
+  y += 44;
+
+  // ── Diagnóstico ───────────────────────────────────────────────────────────
+  const tieneDesc = descripcion && descripcion !== '—';
+  const altDiag = tieneDesc ? 34 : 22;
+  doc.setFillColor(248,252,253); doc.setDrawColor(224,244,247); doc.setLineWidth(0.5);
+  doc.roundedRect(M, y, W-2*M, altDiag, 3, 3, 'FD');
+  doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...CAL);
+  doc.text('DIAGNÓSTICO / FALLA', M+6, y+8);
+  doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(25,28,32);
+  doc.text(tipo, M+6, y+17);
+  if (tieneDesc) {
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(107,114,128);
+    const dl = doc.splitTextToSize(descripcion, W-2*M-16);
+    doc.text(dl, M+6, y+25);
+    y += Math.max(34, dl.length*5+28);
+  } else { y += 26; }
+
+  // ── Códigos DTC ───────────────────────────────────────────────────────────
+  if (dtcs.length) {
+    doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...CAL);
+    doc.text('CÓDIGOS DTC', M, y+6);
+    let dx = M + 32;
+    dtcs.forEach(code => {
+      const tw = doc.getTextWidth(code) + 8;
+      doc.setFillColor(224,244,247); doc.roundedRect(dx, y+1, tw, 7, 1, 1, 'F');
+      doc.setTextColor(...CAL_DARK); doc.setFontSize(7.5); doc.setFont('helvetica','bold');
+      doc.text(code, dx + tw/2, y+6, { align:'center' });
+      dx += tw + 4;
+    });
+    y += 14;
+  }
+
+  // ── Servicio realizado (ítems) ────────────────────────────────────────────
+  y = pdfTablaItems(doc, items, y, W, M);
+  y = pdfTotal(doc, sumItems(items), y, W, M);
+
+  // ── Notas ────────────────────────────────────────────────────────────────
+  if (notas && notas !== '—') y = pdfNotas(doc, notas, y, W, M);
+
+  // ── Firma ────────────────────────────────────────────────────────────────
+  pdfFirma(doc, y, M);
+  pdfPie(doc, W);
+
+  const patSafe = patente.toLowerCase().replace(/[^a-z0-9]/g,'');
+  try {
+    doc.save(`historial-${patSafe || 'vehiculo'}-${fechaEnt.replace(/\//g,'-')}.pdf`);
+    toast('PDF historial generado ✓');
+  } catch(e) { toast('Error al generar PDF: ' + e.message, false); }
+}
+
+async function eliminarFicha(id) {
+  if (!confirm('¿Eliminar esta ficha? Se perderán los datos y fotos asociados.')) return;
+  try {
+    await api('/api/historial/' + id, { method: 'DELETE' });
+    toast('Ficha eliminada');
+    loadHistorial();
+  } catch(e) { toast('Error eliminando', false); }
+}
+
+// ── Fotos ────────────────────────────────────────────────────────────────
+function renderFotos(fotos) {
+  const grid = document.getElementById('fotos-grid');
+  if (!fotos.length) {
+    grid.innerHTML = '<div style="font-size:.82rem;color:var(--text3);font-style:italic">Sin fotos aún</div>'; return;
+  }
+  grid.innerHTML = fotos.map(url => `
+    <div class="foto-thumb" onclick="abrirLightbox('${url}')">
+      <img src="${url}" loading="lazy" alt="Foto evidencia">
+      <button class="foto-del" onclick="event.stopPropagation();eliminarFoto('${url}')" title="Eliminar">✕</button>
+    </div>`).join('');
+}
+
+async function subirFotos(input) {
+  const id = document.getElementById('hist-id').value;
+  if (!id) return;
+  const hint = document.getElementById('fotos-upload-hint');
+  const archivos = Array.from(input.files);
+  if (!archivos.length) return;
+
+  // Validar tamaño
+  for (const f of archivos) {
+    if (f.size > 8 * 1024 * 1024) {
+      toast(`${f.name} supera los 8 MB`, false); continue;
+    }
+  }
+
+  const grid = document.getElementById('fotos-grid');
+  // Mostrar placeholders de carga
+  archivos.forEach(() => {
+    const ph = document.createElement('div');
+    ph.className = 'foto-uploading';
+    ph.textContent = '⏳';
+    grid.prepend(ph);
+  });
+
+  let fichaActualizada;
+  for (const archivo of archivos) {
+    if (archivo.size > 8 * 1024 * 1024) continue;
+    try {
+      const base64 = await fileToBase64(archivo);
+      fichaActualizada = await api(`/api/historial/${id}/fotos`, {
+        method: 'POST',
+        body: JSON.stringify({ imagen: base64 })
+      });
+    } catch(e) {
+      toast('Error subiendo ' + archivo.name + ': ' + e.message, false);
+    }
+  }
+
+  input.value = ''; // reset input
+  if (fichaActualizada) renderFotos(fichaActualizada.fotos || []);
+  else {
+    // Recargar ficha para obtener fotos actualizadas
+    try {
+      const f = await api('/api/historial/' + id);
+      renderFotos(f.fotos || []);
+    } catch(_) {}
+  }
+  // Actualizar cache
+  loadHistorial();
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('Error leyendo archivo'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function eliminarFoto(url) {
+  if (!confirm('¿Eliminar esta foto?')) return;
+  const id = document.getElementById('hist-id').value;
+  try {
+    const f = await api(`/api/historial/${id}/fotos`, {
+      method: 'DELETE',
+      body: JSON.stringify({ url })
+    });
+    renderFotos(f.fotos || []);
+    loadHistorial();
+  } catch(e) { toast('Error eliminando foto', false); }
+}
+
+// ── Lightbox ─────────────────────────────────────────────────────────────
+function abrirLightbox(url) {
+  let lb = document.getElementById('lightbox');
+  if (!lb) {
+    lb = document.createElement('div');
+    lb.id = 'lightbox';
+    lb.className = 'lightbox';
+    lb.innerHTML = `<button class="lightbox-close" onclick="cerrarLightbox()">✕</button><img id="lb-img" src="" alt="">`;
+    lb.addEventListener('click', e => { if (e.target === lb) cerrarLightbox(); });
+    document.body.appendChild(lb);
+  }
+  document.getElementById('lb-img').src = url;
+  lb.classList.add('open');
+}
+function cerrarLightbox() {
+  const lb = document.getElementById('lightbox');
+  if (lb) lb.classList.remove('open');
+}
+
+// ─── PRESUPUESTOS ─────────────────────────────────────────────────────────
+async function loadPresupuestos() {
+  try {
+    const data = await api('/api/presupuestos');
+    _presupuestosCache = data;
+    const query = document.getElementById('search-presup')?.value || '';
+    filtrarPresupuestos(query);
+  } catch(e) { toast('Error cargando presupuestos: ' + e.message, false); }
+}
+
+function renderPresupuestos(data) {
+  const list = document.getElementById('presupuestos-list');
+  document.getElementById('presup-count').textContent = `(${_presupuestosCache.length})`;
+  if (!data.length) {
+    const msg = document.getElementById('search-presup')?.value
+      ? 'Sin resultados para esa búsqueda'
+      : 'Sin presupuestos aún';
+    const sub = document.getElementById('search-presup')?.value
+      ? 'Intenta con otro nombre o patente'
+      : 'Crea el primer presupuesto con el botón de arriba';
+    list.innerHTML = `<div class="empty" style="grid-column:1/-1">
+      <div class="empty-icon">📋</div>
+      <div class="empty-title">${msg}</div>
+      <div style="font-size:.82rem">${sub}</div>
+    </div>`; return;
+  }
+  list.innerHTML = data.map(p => {
+    const total = sumItems(p.items);
+    return `<div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-num">N°\u00a0${padNum(p.numero)} · ${fmtDate(p.fecha)}</div>
+          <div class="card-title">${p.cliente || 'Sin nombre'}</div>
+          <div class="card-sub">${[p.marca,p.modelo,p.anio].filter(Boolean).join(' ')}${p.patente?' · '+p.patente:''}</div>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-icon btn-secondary" onclick="editarPresupuesto('${p._id}')" title="Editar">✏️</button>
+          <button class="btn btn-icon btn-secondary" onclick="pdfPresupuesto('${p._id}')" title="Descargar PDF">📄</button>
+          <button class="btn btn-icon btn-danger" onclick="eliminarPresupuesto('${p._id}')" title="Eliminar">🗑</button>
+        </div>
+      </div>
+      <div style="font-size:.8rem;color:var(--text3)">${(p.items||[]).length} ítem(s)</div>
+      <div class="card-footer">
+        <span class="card-total">${fmt(total)}</span>
+        <span class="card-note">${p.notas||''}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function abrirModalPresupuesto() {
+  document.getElementById('presup-id').value = '';
+  document.getElementById('modal-presup-title').textContent = 'Nuevo presupuesto';
+  ['cliente','telefono','marca','modelo','anio','patente','km','notas']
+    .forEach(f => document.getElementById('presup-' + f).value = '');
+  document.getElementById('presup-items').innerHTML = '';
+  document.getElementById('presup-total').textContent = '$0';
+  agregarItem('presup-items', 'mano_obra');
+  document.getElementById('modal-presupuesto').classList.add('open');
+}
+
+async function editarPresupuesto(id) {
+  try {
+    const p = await api('/api/presupuestos/' + id);
+    document.getElementById('presup-id').value = p._id;
+    document.getElementById('modal-presup-title').textContent = `Editar N°\u00a0${padNum(p.numero)}`;
+    ['cliente','telefono','marca','modelo','anio','patente','km','notas']
+      .forEach(f => document.getElementById('presup-' + f).value = p[f] || '');
+    document.getElementById('presup-items').innerHTML = '';
+    (p.items || []).forEach(i => agregarItem('presup-items', i.tipo, i.descripcion, i.valor));
+    if (!(p.items || []).length) agregarItem('presup-items', 'mano_obra');
+    calcTotal('presup-items');
+    document.getElementById('modal-presupuesto').classList.add('open');
+  } catch(e) { toast('Error cargando presupuesto: ' + e.message, false); }
+}
+
+async function guardarPresupuesto(genPDF) {
+  const id = document.getElementById('presup-id').value;
+  const payload = {
+    cliente:  document.getElementById('presup-cliente').value.trim(),
+    telefono: document.getElementById('presup-telefono').value.trim(),
+    marca:    document.getElementById('presup-marca').value.trim(),
+    modelo:   document.getElementById('presup-modelo').value.trim(),
+    anio:     document.getElementById('presup-anio').value.trim(),
+    patente:  document.getElementById('presup-patente').value.trim().toUpperCase(),
+    km:       document.getElementById('presup-km').value.trim(),
+    notas:    document.getElementById('presup-notas').value.trim(),
+    items:    getItems('presup-items')
+  };
+  if (!payload.cliente) return toast('El nombre del cliente es obligatorio', false);
+  try {
+    const url    = id ? '/api/presupuestos/' + id : '/api/presupuestos';
+    const method = id ? 'PUT' : 'POST';
+    const saved  = await api(url, { method, body: JSON.stringify(payload) });
+    cerrarModal('modal-presupuesto');
+    toast('Presupuesto guardado ✓');
+    await loadPresupuestos();
+    if (genPDF) setTimeout(() => generarPDFPresupuesto(saved), 300);
+  } catch(e) { toast('Error guardando: ' + e.message, false); }
+}
+
+async function eliminarPresupuesto(id) {
+  if (!confirm('¿Eliminar este presupuesto? Esta acción no se puede deshacer.')) return;
+  try {
+    await api('/api/presupuestos/' + id, { method: 'DELETE' });
+    toast('Presupuesto eliminado'); loadPresupuestos();
+  } catch(e) { toast('Error eliminando', false); }
+}
+
+async function pdfPresupuesto(id) {
+  try {
+    const p = await api('/api/presupuestos/' + id);
+    generarPDFPresupuesto(p);
+  } catch(e) { toast('Error generando PDF: ' + e.message, false); }
+}
+
+// ─── REPARACIONES ─────────────────────────────────────────────────────────
+let kanbanWeekOffset = 0;
+let kanbanVerTodosActivos = false;
+
+function getWeekRange(offset) {
+  const now = new Date();
+  const day = now.getDay();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - (day === 0 ? 6 : day - 1) + offset * 7);
+  monday.setHours(0, 0, 0, 0);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+  return { monday, sunday };
+}
+
+function formatWeekLabel(offset) {
+  const { monday, sunday } = getWeekRange(offset);
+  const opts = { day: 'numeric', month: 'short' };
+  const m = monday.toLocaleDateString('es-CL', opts);
+  const s = sunday.toLocaleDateString('es-CL', { ...opts, year: 'numeric' });
+  if (offset === 0) return `Esta semana · ${m} – ${s}`;
+  if (offset === -1) return `Semana anterior · ${m} – ${s}`;
+  if (offset === 1) return `Próxima semana · ${m} – ${s}`;
+  return `${m} – ${s}`;
+}
+
+function actualizarSemanaUI() {
+  const lbl = document.getElementById('semana-label');
+  if (!lbl) return;
+  lbl.textContent = formatWeekLabel(kanbanWeekOffset);
+  lbl.classList.toggle('actual', kanbanWeekOffset === 0);
+  const btnHoy = document.getElementById('btn-hoy');
+  const btnSig = document.getElementById('btn-semana-sig');
+  if (btnHoy) btnHoy.style.opacity = kanbanWeekOffset === 0 ? '0.4' : '1';
+  if (btnSig) btnSig.style.opacity = kanbanWeekOffset >= 1 ? '0.4' : '1';
+}
+
+function cambiarSemana(delta) {
+  if (kanbanWeekOffset + delta > 1) return;
+  kanbanWeekOffset += delta;
+  loadReparaciones();
+}
+
+function irSemanaActual() {
+  if (kanbanWeekOffset === 0) return;
+  kanbanWeekOffset = 0;
+  loadReparaciones();
+}
+
+function toggleActivos(val) {
+  kanbanVerTodosActivos = val;
+  loadReparaciones();
+}
+
+function semanaCorta(fecha) {
+  if (!fecha) return '';
+  const d = new Date(fecha);
+  if (isNaN(d)) return '';
+  return d.toLocaleDateString('es-CL', { day: 'numeric', month: 'short' });
+}
+
+async function loadReparaciones() {
+  actualizarSemanaUI();
+  try {
+    const data = await api('/api/reparaciones');
+    _reparacionesCache = data;
+    document.getElementById('rep-count').textContent = `(${data.length})`;
+    const query = document.getElementById('search-rep')?.value || '';
+    if (query) {
+      filtrarReparaciones(query);
+    } else {
+      renderKanbanFiltrado(data);
+    }
+  } catch(e) { toast('Error cargando reparaciones', false); }
+}
+
+function renderKanbanFiltrado(data) {
+  // Aplica el filtro de semana + toggle activos
+  const { monday, sunday } = getWeekRange(kanbanWeekOffset);
+  const filtrados = data.filter(r => {
+    const fechaRef = new Date(r.fechaIngreso || r.createdAt);
+    const enSemana = fechaRef >= monday && fechaRef <= sunday;
+    const esActivo = r.estado !== 'entregado';
+    return enSemana || (kanbanVerTodosActivos && esActivo);
+  }).map(r => {
+    const fechaRef = new Date(r.fechaIngreso || r.createdAt);
+    const enSemana = fechaRef >= monday && fechaRef <= sunday;
+    return { ...r, _foraneo: !enSemana };
+  });
+  renderKanban(filtrados);
+}
+
+function renderKanban(data) {
+  const cols = { presupuesto_enviado: [], en_reparacion: [], entregado: [] };
+  data.forEach(r => {
+    const estado = r.estado || 'presupuesto_enviado';
+    if (cols[estado]) cols[estado].push(r);
+    else cols.presupuesto_enviado.push(r);
+  });
+
+  ['presupuesto_enviado', 'en_reparacion', 'entregado'].forEach(key => {
+    const items = cols[key];
+    document.getElementById('cnt-' + key).textContent = items.length;
+    const body = document.getElementById('body-' + key);
+    if (!items.length) {
+      body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:.8rem">Sin vehículos</div>';
+      return;
+    }
+    body.innerHTML = items.map(r => {
+      const total = sumItems(r.items);
+      const claseForaneo = r._foraneo ? ' foraneo' : '';
+      const etiquetaSemana = r._foraneo
+        ? `<div class="kc-semana">&#128197; Ingreso: ${semanaCorta(r.fechaIngreso || r.createdAt)}</div>`
+        : '';
+      return `<div class="kcard${claseForaneo}" onclick="editarReparacion('${r._id}')">
+        <div class="kc-patente">${r.patente || '—'}</div>
+        <div class="kc-auto">${[r.marca,r.modelo,r.anio].filter(Boolean).join(' ') || 'Vehículo'}</div>
+        <div class="kc-tipo">${r.tipo || 'Sin tipo'}</div>
+        <div class="kc-owner">&#128100; ${r.cliente || 'Sin propietario'}</div>
+        ${etiquetaSemana}
+        ${r.fechaEntrega ? `<div style="font-size:.72rem;color:var(--text3);margin-top:4px">&#128197; ${fmtDate(r.fechaEntrega)}</div>` : ''}
+        ${total > 0 ? `<div class="kc-total">${fmt(total)}</div>` : ''}
+        <div class="kc-actions" onclick="event.stopPropagation()">
+          ${key==='presupuesto_enviado' ? `<button class="btn btn-sm btn-secondary" onclick="cambiarEstado('${r._id}','en_reparacion')">→ Reparar</button>` : ''}
+          ${key==='en_reparacion'      ? `<button class="btn btn-sm btn-secondary" onclick="cambiarEstado('${r._id}','entregado')">→ Entregar</button>` : ''}
+          ${key==='entregado'          ? `<button class="btn btn-sm btn-primary"   onclick="pdfInforme('${r._id}')">&#128196; Informe</button>` : ''}
+          <button class="btn btn-sm btn-danger" onclick="eliminarReparacion('${r._id}')">&#128465;</button>
+        </div>
+      </div>`;
+    }).join('');
+  });
+}
+
+function abrirModalReparacion() {
+  document.getElementById('rep-id').value = '';
+  document.getElementById('modal-rep-title').textContent = 'Nueva reparación';
+  ['cliente','telefono','marca','modelo','anio','patente','km','tipo','descripcion','notas']
+    .forEach(f => document.getElementById('rep-' + f).value = '');
+  document.getElementById('rep-estado').value = 'presupuesto_enviado';
+  document.getElementById('rep-fecha-entrega').value = '';
+  document.getElementById('rep-items').innerHTML = '';
+  document.getElementById('rep-total').textContent = '$0';
+  agregarItem('rep-items', 'mano_obra');
+  document.getElementById('modal-reparacion').classList.add('open');
+}
+
+async function editarReparacion(id) {
+  try {
+    const r = await api('/api/reparaciones/' + id);
+    document.getElementById('rep-id').value = r._id;
+    document.getElementById('modal-rep-title').textContent = `Editar — ${[r.marca,r.modelo].filter(Boolean).join(' ') || r.patente || 'Reparación'}`;
+    ['cliente','telefono','marca','modelo','anio','patente','km','tipo','descripcion','notas']
+      .forEach(f => document.getElementById('rep-' + f).value = r[f] || '');
+    document.getElementById('rep-estado').value = r.estado || 'presupuesto_enviado';
+    document.getElementById('rep-fecha-entrega').value = r.fechaEntrega ? r.fechaEntrega.substring(0, 10) : '';
+    document.getElementById('rep-items').innerHTML = '';
+    (r.items || []).forEach(i => agregarItem('rep-items', i.tipo, i.descripcion, i.valor));
+    if (!(r.items || []).length) agregarItem('rep-items', 'mano_obra');
+    calcTotal('rep-items');
+    document.getElementById('modal-reparacion').classList.add('open');
+  } catch(e) { toast('Error cargando reparación: ' + e.message, false); }
+}
+
+async function guardarReparacion() {
+  const id = document.getElementById('rep-id').value;
+  const payload = {
+    cliente:      document.getElementById('rep-cliente').value.trim(),
+    telefono:     document.getElementById('rep-telefono').value.trim(),
+    marca:        document.getElementById('rep-marca').value.trim(),
+    modelo:       document.getElementById('rep-modelo').value.trim(),
+    anio:         document.getElementById('rep-anio').value.trim(),
+    patente:      document.getElementById('rep-patente').value.trim().toUpperCase(),
+    km:           document.getElementById('rep-km').value.trim(),
+    tipo:         document.getElementById('rep-tipo').value.trim(),
+    descripcion:  document.getElementById('rep-descripcion').value.trim(),
+    notas:        document.getElementById('rep-notas').value.trim(),
+    estado:       document.getElementById('rep-estado').value,
+    fechaEntrega: document.getElementById('rep-fecha-entrega').value || null,
+    items:        getItems('rep-items')
+  };
+  if (!payload.cliente) return toast('El nombre del propietario es obligatorio', false);
+  if (!payload.tipo)    return toast('El tipo de reparación es obligatorio', false);
+  try {
+    const url    = id ? '/api/reparaciones/' + id : '/api/reparaciones';
+    const method = id ? 'PUT' : 'POST';
+    await api(url, { method, body: JSON.stringify(payload) });
+    cerrarModal('modal-reparacion');
+    toast('Reparación guardada ✓');
+    loadReparaciones();
+  } catch(e) { toast('Error guardando: ' + e.message, false); }
+}
+
+async function cambiarEstado(id, estado) {
+  try {
+    await api('/api/reparaciones/' + id, { method:'PUT', body: JSON.stringify({ estado }) });
+    toast('Estado actualizado ✓'); loadReparaciones();
+  } catch(e) { toast('Error actualizando estado', false); }
+}
+
+async function eliminarReparacion(id) {
+  if (!confirm('¿Eliminar esta reparación?')) return;
+  try {
+    await api('/api/reparaciones/' + id, { method: 'DELETE' });
+    toast('Eliminado'); loadReparaciones();
+  } catch(e) { toast('Error eliminando', false); }
+}
+
+async function pdfInforme(id) {
+  try {
+    const r = await api('/api/reparaciones/' + id);
+    generarPDFInforme(r);
+  } catch(e) { toast('Error generando informe: ' + e.message, false); }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// PDF — HELPERS COMUNES (CON PISTÓN REAL Y VALIDACIONES ROBUSTAS)
+// ════════════════════════════════════════════════════════════════════════════
+const CAL      = [0, 151, 167];
+const CAL_DARK = [0, 105, 120];
+
+// URL de imagen real de pistón - hosting confiable (imgur)
+const PISTON_IMAGE_URL = 'https://i.imgur.com/8Km9tLL.png';
+
+function dibujarPiston(doc, x, y, scale = 1) {
+  // Reemplazado: ahora usa imagen real de pistón
+  const width = 35 * scale;
+  const height = 35 * scale;
+  
+  try {
+    doc.addImage(PISTON_IMAGE_URL, 'PNG', x, y, width, height);
+  } catch (e) {
+    // Fallback si falla la carga de imagen
+    const [R,G,B] = CAL;
+    doc.setDrawColor(R,G,B);
+    doc.setFillColor(240,240,245);
+    doc.setLineWidth(1);
+    
+    // Círculo base
+    doc.circle(x + width/2, y + height/2, width/3, 'FD');
+    // Anillos
+    doc.setLineWidth(2);
+    doc.circle(x + width/2, y + height/2, width/4, 'S');
+    doc.setLineWidth(1);
+    doc.circle(x + width/2, y + height/2, width/5, 'S');
+  }
+}
+
+function pdfHeader(doc, W, M, badge, subBadge, extra) {
+  const headerHeight = 40;
+  
+  // Fondo blanco
+  doc.setFillColor(255,255,255);
+  doc.rect(0, 0, W, headerHeight, 'F');
+  
+  // Línea superior fina color marca
+  doc.setDrawColor(...CAL);
+  doc.setLineWidth(2);
+  doc.line(M, 6, W-M, 6);
+  
+  // Logo pistón REAL (imagen)
+  dibujarPiston(doc, M+5, 10, 0.9);
+  
+  // Nombre taller - más sobrio
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(20);
+  doc.setTextColor(25,30,35);
+  doc.text('BGarage', M+42, 22);
+  
+  // Subtítulo minimalista
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(130,140,150);
+  doc.text('TALLER AUTOMOTRIZ ESPECIALIZADO · CONCEPCIÓN', M+42, 29);
+  
+  // Separador vertical sutil
+  doc.setDrawColor(230,235,240);
+  doc.setLineWidth(0.5);
+  doc.line(W-90, 12, W-90, 34);
+  
+  // Tipo documento (badge)
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.setTextColor(...CAL_DARK);
+  doc.text(badge.toUpperCase(), W-M-5, 20, { align: 'right' });
+  
+  // Info extra
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(140,150,160);
+  doc.text(subBadge, W-M-5, 27, { align: 'right' });
+  
+  if (extra) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(...CAL);
+    doc.text(extra, W-M-5, 33, { align: 'right' });
+  }
+  
+  // Línea inferior sutil
+  doc.setDrawColor(245,247,250);
+  doc.setLineWidth(0.5);
+  doc.line(M, headerHeight-2, W-M, headerHeight-2);
+}
+
+function pdfInfoBox(doc, x, y, w, h, titulo, linea1, linea2, linea3) {
+  doc.setFillColor(248,252,253); doc.setDrawColor(224,244,247); doc.setLineWidth(.5);
+  doc.roundedRect(x, y, w, h, 3, 3, 'FD');
+  doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...CAL);
+  doc.text(titulo, x+6, y+8);
+  if (linea1) {
+    doc.setFont('helvetica','bold'); doc.setFontSize(10.5); doc.setTextColor(25,28,32);
+    doc.text(String(linea1), x+6, y+17);
+  }
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(107,114,128);
+  if (linea2) doc.text(String(linea2), x+6, y+25);
+  if (linea3) doc.text(String(linea3), x+6, y+32);
+}
+
+function pdfTablaItems(doc, items, yStart, W, M) {
+  let y = yStart;
+  // Cabecera tabla
+  doc.setFillColor(220,220,220); doc.rect(M, y, W-2*M, 9,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(...CAL);
+  doc.text('DESCRIPCIÓN', M+5, y+6);
+  doc.text('TIPO', M+118, y+6);
+  doc.text('VALOR', W-M-5, y+6, {align:'right'});
+  y += 11;
+
+  if (!items || !items.length) {
+    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(156,163,175);
+    doc.text('Sin ítems registrados', M+5, y+7); y += 14;
+  } else {
+    items.forEach((item, idx) => {
+      const lines = doc.splitTextToSize(item.descripcion || '', 100);
+      const rh = Math.max(lines.length*5+6, 10);
+      if (idx%2===0){ doc.setFillColor(248,252,253); doc.rect(M,y-1,W-2*M,rh+2,'F'); }
+      doc.setDrawColor(228,244,246); doc.setLineWidth(.2);
+      doc.line(M, y+rh+1, W-M, y+rh+1);
+      doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(25,28,32);
+      doc.text(lines, M+5, y+5.5);
+      const esMO = item.tipo === 'mano_obra';
+      if(esMO){
+        doc.setFillColor(224,244,247); doc.roundedRect(M+110,y+1,26,6,1,1,'F');
+        doc.setFont('helvetica','bold'); doc.setFontSize(6); doc.setTextColor(...CAL_DARK);
+        doc.text('MANO OBRA', M+123, y+5.2, {align:'center'});
+      } else {
+        doc.setFillColor(232,244,255); doc.roundedRect(M+110,y+1,26,6,1,1,'F');
+        doc.setFont('helvetica','bold'); doc.setFontSize(6); doc.setTextColor(41,128,185);
+        doc.text('REPUESTO', M+123, y+5.2, {align:'center'});
+      }
+      doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(25,28,32);
+      doc.text(fmt(item.valor), W-M-5, y+5.5, {align:'right'});
+      y += rh+3;
+    });
+  }
+  return y;
+}
+
+function pdfTotal(doc, total, y, W, M) {
+  y += 2;
+  doc.setFillColor(220,220,220); doc.rect(M,y,W-2*M,13,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(255,255,255);
+  doc.text('TOTAL', M+6, y+9);
+  doc.setTextColor(...CAL);
+  doc.text(fmt(total), W-M-5, y+9, {align:'right'});
+  return y+19;
+}
+
+function pdfNotas(doc, notas, y, W, M) {
+  if (!notas) return y;
+  const lines = doc.splitTextToSize(notas, W-2*M-16);
+  const h = lines.length*5+14;
+  doc.setFillColor(248,252,253); doc.setDrawColor(224,244,247); doc.setLineWidth(.4);
+  doc.roundedRect(M, y, W-2*M, h, 2, 2, 'FD');
+  doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...CAL);
+  doc.text('OBSERVACIONES', M+6, y+7);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(80,80,90);
+  doc.text(lines, M+6, y+13);
+  return y+h+10;
+}
+
+function pdfFirma(doc, y, xPos) {
+  y = Math.max(y, 248);
+  doc.setDrawColor(...CAL); doc.setLineWidth(.6);
+  doc.line(xPos, y, xPos+80, y);
+  doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(25,28,32);
+  doc.text('Bastian Espinoza F.', xPos, y+8);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(107,114,128);
+  doc.text('+56 9 5935 5607', xPos, y+15);
+  doc.text('BGarage — Taller Automotriz, Concepción', xPos, y+21);
+}
+
+function pdfPie(doc, W) {
+  doc.setFillColor(...CAL); doc.rect(0,285,W,12,'F');
+  doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(255,255,255);
+  doc.text('BGarage — Taller Automotriz  ·  +56 9 5935 5607  ·  Concepción, Chile', W/2, 292, {align:'center'});
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// PDF PRESUPUESTO - CORREGIDO CON VALIDACIONES
+// ════════════════════════════════════════════════════════════════════════════
+function generarPDFPresupuesto(p) {
+  if (!p) { toast('No hay datos del presupuesto', false); return; }
+  
+  // Validar que jsPDF esté cargado
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    toast('Error: Librería PDF no cargada', false);
+    return;
+  }
+  
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4' });
+  const W=210, M=18;
+
+  // Sanitizar datos
+  const numero = safeStr(p.numero, '0');
+  const cliente = safeStr(p.cliente);
+  const telefono = safeStr(p.telefono);
+  const marca = safeStr(p.marca);
+  const modelo = safeStr(p.modelo);
+  const anio = safeStr(p.anio);
+  const patente = safeStr(p.patente);
+  const km = safeStr(p.km);
+  const notas = safeStr(p.notas);
+  const fecha = p.fecha ? fmtDate(p.fecha) : fmtDate(new Date());
+  const items = Array.isArray(p.items) ? p.items : [];
+
+  // Cabecera
+  pdfHeader(doc, W, M,
+    'PRESUPUESTO',
+    `N° ${padNum(numero)}`,
+    `Fecha: ${fecha}`
+  );
+
+  let y = 68;
+  const colW = (W-2*M-8)/2;
+
+  // Boxes info
+  pdfInfoBox(doc, M, y, colW, 28,
+    'CLIENTE',
+    cliente,
+    telefono,
+    ''
+  );
+  pdfInfoBox(doc, M+colW+8, y, colW, 38,
+    'VEHÍCULO',
+    [marca, modelo, anio].filter(v => v && v !== '—').join(' ') || '—',
+    [patente !== '—' ? 'Patente: '+patente : '', km !== '—' ? 'KM: '+km : ''].filter(Boolean).join('   '),
+    ''
+  );
+  y += 46;
+
+  // Tabla ítems
+  y = pdfTablaItems(doc, items, y, W, M);
+
+  // Total
+  y = pdfTotal(doc, sumItems(items), y, W, M);
+
+  // Notas
+  if (notas && notas !== '—') {
+    y = pdfNotas(doc, notas, y, W, M);
+  }
+
+  // Validez del presupuesto
+  y = Math.min(y, 236);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(156,163,175);
+  doc.text('* Este presupuesto tiene una validez de 7 días desde su emisión.', M, y);
+  y += 8;
+
+  // Firma
+  pdfFirma(doc, y, M);
+
+  // Pie
+  pdfPie(doc, W);
+
+  // Guardar con nombre seguro
+  const nombreSafe = cliente.replace(/\s+/g,'-').toLowerCase().replace(/[^a-z0-9\-]/g, '');
+  
+  try {
+    doc.save(`presupuesto-${padNum(numero)}-${nombreSafe || 'cliente'}.pdf`);
+    toast('PDF presupuesto generado ✓');
+  } catch (e) {
+    console.error('Error guardando PDF:', e);
+    toast('Error al generar PDF: ' + e.message, false);
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// PDF INFORME DE ENTREGA - CORREGIDO CON VALIDACIONES ROBUSTAS
+// ════════════════════════════════════════════════════════════════════════════
+function generarPDFInforme(r) {
+  if (!r) { 
+    toast('No hay datos de la reparación', false); 
+    return; 
+  }
+  
+  // Validar que jsPDF esté cargado
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    toast('Error: Librería PDF no cargada', false);
+    return;
+  }
+  
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4' });
+  const W = 210, M = 18;
+
+  // Sanitizar datos - convertir todo a string seguro
+  const numero = safeStr(r.numero, '0');
+  const cliente = safeStr(r.cliente);
+  const telefono = safeStr(r.telefono);
+  const marca = safeStr(r.marca);
+  const modelo = safeStr(r.modelo);
+  const anio = safeStr(r.anio);
+  const patente = safeStr(r.patente);
+  const km = safeStr(r.km);
+  const tipo = safeStr(r.tipo);
+  const descripcion = safeStr(r.descripcion);
+  const notas = safeStr(r.notas);
+  const fechaEntrega = fmtDate(new Date());
+  const fechaIngreso = r.fechaIngreso ? fmtDate(r.fechaIngreso) : '—';
+  const items = Array.isArray(r.items) ? r.items : [];
+
+  // Cabecera
+  pdfHeader(doc, W, M,
+    'INFORME DE ENTREGA',
+    `Reparación N° ${padNum(numero)}`,
+    `Entrega: ${fechaEntrega}`
+  );
+
+  let y = 68;
+  const colW = (W - 2 * M - 8) / 2;
+
+  // Box propietario
+  pdfInfoBox(doc, M, y, colW, 28,
+    'PROPIETARIO',
+    cliente,
+    telefono,
+    ''
+  );
+
+  // Box vehículo
+  const vehiculoTexto = [marca, modelo, anio].filter(v => v && v !== '—').join(' ') || '—';
+  const detallesVehiculo = [
+    patente !== '—' ? 'Pat: ' + patente : '',
+    km !== '—' ? 'KM ingreso: ' + km : ''
+  ].filter(Boolean).join('   ') || '';
+
+  pdfInfoBox(doc, M + colW + 8, y, colW, 38,
+    'VEHÍCULO',
+    vehiculoTexto,
+    detallesVehiculo,
+    `Ingreso: ${fechaIngreso}`
+  );
+  y += 52;
+
+  // Box trabajo realizado
+  const tieneDescripcion = descripcion && descripcion !== '—';
+  const alturaBox = tieneDescripcion ? 34 : 22;
+  
+  doc.setFillColor(248, 252, 253); 
+  doc.setDrawColor(224, 244, 247); 
+  doc.setLineWidth(0.5);
+  doc.roundedRect(M, y, W - 2 * M, alturaBox, 3, 3, 'FD');
+  
+  doc.setFont('helvetica', 'bold'); 
+  doc.setFontSize(7); 
+  doc.setTextColor(...CAL);
+  doc.text('TRABAJO REALIZADO', M + 6, y + 8);
+  
+  doc.setFont('helvetica', 'bold'); 
+  doc.setFontSize(11); 
+  doc.setTextColor(25, 28, 32);
+  doc.text(tipo, M + 6, y + 17);
+  
+  if (tieneDescripcion) {
+    doc.setFont('helvetica', 'normal'); 
+    doc.setFontSize(8.5); 
+    doc.setTextColor(107, 114, 128);
+    const descLines = doc.splitTextToSize(descripcion, W - 2 * M - 16);
+    doc.text(descLines, M + 6, y + 25);
+    y += Math.max(34, descLines.length * 5 + 28);
+  } else {
+    y += 28;
+  }
+
+  // Tabla ítems
+  y = pdfTablaItems(doc, items, y, W, M);
+
+  // Total
+  y = pdfTotal(doc, sumItems(items), y, W, M);
+
+  // Notas / recomendaciones
+  if (notas && notas !== '—') {
+    y = pdfNotas(doc, notas, y, W, M);
+  }
+
+  // Sección firma cliente
+  const yFirmaCliente = Math.min(y + 4, 244);
+  
+  doc.setFont('helvetica', 'bold'); 
+  doc.setFontSize(7); 
+  doc.setTextColor(...CAL);
+  doc.text('CONFORMIDAD DEL CLIENTE', M, yFirmaCliente);
+  
+  doc.setFont('helvetica', 'normal'); 
+  doc.setFontSize(8); 
+  doc.setTextColor(107, 114, 128);
+  doc.text('Al firmar este documento, el cliente declara haber recibido el vehículo en conformidad.', M, yFirmaCliente + 6);
+  
+  // Líneas de firma
+  doc.setDrawColor(150, 160, 170); 
+  doc.setLineWidth(0.4);
+  doc.line(M, yFirmaCliente + 18, M + 80, yFirmaCliente + 18);
+  doc.text('Firma propietario', M, yFirmaCliente + 23);
+  
+  doc.line(W - M - 80, yFirmaCliente + 18, W - M, yFirmaCliente + 18);
+  doc.text('Fecha', W - M - 20, yFirmaCliente + 23);
+
+  // Firma taller
+  pdfFirma(doc, yFirmaCliente + 6, W - M - 90);
+
+  // Pie
+  pdfPie(doc, W);
+
+  // Guardar con nombre seguro
+  const nombreSafe = cliente.replace(/\s+/g, '-').toLowerCase().replace(/[^a-z0-9\-]/g, '');
+  const patenteSafe = patente.toLowerCase().replace(/[^a-z0-9]/g, '');
+  
+  try {
+    doc.save(`informe-${patenteSafe || 'vehiculo'}-${nombreSafe || 'cliente'}.pdf`);
+    toast('Informe PDF generado ✓');
+  } catch (e) {
+    console.error('Error guardando PDF:', e);
+    toast('Error al generar PDF: ' + e.message, false);
+  }
+}
+
+</script>
+</body>
+</html>
